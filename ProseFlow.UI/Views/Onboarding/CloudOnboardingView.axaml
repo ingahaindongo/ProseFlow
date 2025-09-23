@@ -1,0 +1,45 @@
+﻿<UserControl x:Class="ProseFlow.UI.Views.Onboarding.CloudOnboardingView"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:ProseFlow.UI.ViewModels.Onboarding"
+             xmlns:shadui="clr-namespace:ShadUI;assembly=ShadUI"
+             xmlns:icons="clr-namespace:ProseFlow.UI.Controls.Icons"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:DataType="vm:CloudOnboardingViewModel">
+    <StackPanel Spacing="16" MinWidth="450">
+        <ComboBox shadui:ControlAssist.Label="Provider"
+                  ItemsSource="{Binding AvailableProviderTypes}"
+                  SelectedItem="{Binding SelectedProviderType}" />
+
+        <TextBox shadui:ControlAssist.Label="API Key"
+                 shadui:ControlAssist.Hint="Your keys are encrypted and stored locally."
+                 Text="{Binding ApiKey, Mode=TwoWay}"
+                 Watermark="Begins with sk-, gsk-, etc." />
+
+        <TextBox shadui:ControlAssist.Label="Model Name (Optional)"
+                 Text="{Binding ModelName, Mode=TwoWay}"
+                 Watermark="e.g., gpt-4o, llama3-70b-8192" />
+        
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center"
+                        IsVisible="{Binding Status, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter={x:Static vm:TestStatus.Idle}}">
+                <!-- Spinner for Testing -->
+                <ProgressBar IsIndeterminate="True" Width="16" Height="16" IsVisible="{Binding Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:TestStatus.Testing}}" />
+                <!-- Success Icon -->
+                <icons:SymbolIcon Symbol="CircleCheck" Size="16" Classes="Success" IsVisible="{Binding Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:TestStatus.Success}}" />
+                <!-- Error Icon -->
+                <icons:SymbolIcon Symbol="CircleX" Size="16" Classes="Destructive" IsVisible="{Binding Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:TestStatus.Error}}" />
+
+                <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center" Classes="Small" />
+            </StackPanel>
+            
+            <Button Classes="Primary" HorizontalAlignment="Right"
+                    Command="{Binding TestConnectionCommand}"
+                    shadui:ButtonAssist.ShowProgress="{Binding Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:TestStatus.Testing}}">
+                Test Connection
+            </Button>
+        </DockPanel>
+    </StackPanel>
+</UserControl>

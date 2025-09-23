@@ -1,0 +1,158 @@
+﻿<UserControl x:Class="ProseFlow.UI.Views.Downloads.DownloadsPopupView"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:ProseFlow.UI.ViewModels.Downloads"
+             xmlns:dto="using:ProseFlow.Application.DTOs.Models"
+             xmlns:shadui="clr-namespace:ShadUI;assembly=ShadUI"
+             xmlns:icons="clr-namespace:ProseFlow.UI.Controls.Icons"
+             mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="350"
+             x:DataType="vm:DownloadsPopupViewModel">
+
+    <shadui:Card Padding="0" HasShadow="True">
+        <DockPanel>
+            <!-- Header -->
+            <DockPanel DockPanel.Dock="Top" Margin="16" VerticalAlignment="Center">
+                <Button DockPanel.Dock="Right" Classes="Destructive" Command="{Binding ClearAllCompletedCommand}">
+                    <shadui:ButtonAssist.Icon>
+                        <icons:SymbolIcon Symbol="Trash2" Size="16"/>
+                    </shadui:ButtonAssist.Icon>
+                    Clear
+                </Button>
+
+                <TextBlock Classes="h4" Text="Downloads" VerticalAlignment="Center" />
+            </DockPanel>
+
+            <Separator DockPanel.Dock="Top" />
+
+            <!-- Main Content -->
+            <Panel>
+                <!-- Empty State -->
+                <StackPanel Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="48"
+                            IsVisible="{Binding !Downloads.Count}">
+                    <icons:SymbolIcon Symbol="CloudDownload" Size="48" Opacity="0.5" HorizontalAlignment="Center" />
+                    <TextBlock Classes="h4 Muted" Text="No Downloads" HorizontalAlignment="Center"/>
+                    <TextBlock Classes="p Muted" Text="Your model downloads will appear here." HorizontalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Downloads -->
+                <ScrollViewer MaxHeight="450" IsVisible="{Binding Downloads.Count}">
+                    <ItemsControl ItemsSource="{Binding Downloads}" Padding="8, 12">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="vm:DownloadTaskViewModel">
+                                <Grid ColumnDefinitions="Auto, *, Auto" RowDefinitions="Auto, Auto"
+                                      Margin="8,0,8,16" ColumnSpacing="12" RowSpacing="4">
+                                    
+                                    <Grid.Transitions>
+                                        <Transitions>
+                                            <DoubleTransition Property="Opacity" Duration="0:0:0.3"/>
+                                        </Transitions>
+                                    </Grid.Transitions>
+
+                                    <!-- Status Icon -->
+                                    <Panel Grid.Row="0" Grid.RowSpan="2" VerticalAlignment="Center">
+                                        <!-- Downloading Icon -->
+                                        <icons:SymbolIcon Symbol="Download" Size="24" Opacity="0.7"
+                                                    IsVisible="{Binding Task.Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static dto:DownloadStatus.Downloading}}" />
+                                        <!-- Completed Icon -->
+                                        <icons:SymbolIcon Symbol="CircleCheck" Size="24" Classes="Success"
+                                                    IsVisible="{Binding Task.Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static dto:DownloadStatus.Completed}}" />
+                                        <!-- Canceled Icon -->
+                                        <icons:SymbolIcon Symbol="CircleX" Size="24" Classes="Destructive"
+                                                    IsVisible="{Binding Task.Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static dto:DownloadStatus.Canceled}}" />
+                                        <!-- Failed Icon -->
+                                        <icons:SymbolIcon Symbol="TriangleAlert" Size="24" Classes="Destructive"
+                                                    IsVisible="{Binding Task.Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static dto:DownloadStatus.Failed}}" />
+                                    </Panel>
+                                    
+                                    <!-- File Name and Status/Speed Text -->
+                                    <DockPanel Grid.Column="1" Grid.Row="0" VerticalAlignment="Bottom">
+                                        <!-- Status/Speed Text -->
+                                        <TextBlock DockPanel.Dock="Right" Classes="Small Muted" VerticalAlignment="Center" IsVisible="{Binding Task.Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static dto:DownloadStatus.Downloading}}">
+                                            <Run Text="{Binding Task.Speed, StringFormat='{}{0}MB/s'}"/>
+                                        </TextBlock>
+                                        <TextBlock DockPanel.Dock="Right" Classes="Small Muted" VerticalAlignment="Center" IsVisible="{Binding Task.Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static dto:DownloadStatus.Completed}}">
+                                            <Run Text="{Binding Task.Status}"/>
+                                        </TextBlock>
+                                        
+                                        <!-- File Name -->
+                                        <TextBlock Text="{Binding Task.Quantization.FileName}" FontWeight="Medium" TextTrimming="CharacterEllipsis"/>
+                                    </DockPanel>
+
+                                    <!-- Progress Bar and Progress Text -->
+                                    <Panel Grid.Column="1" Grid.Row="1">
+                                        <!-- Progress Bar -->
+                                        <ProgressBar Value="{Binding Task.ProgressPercentage}" Height="20" CornerRadius="16"
+                                                     IsVisible="{Binding Task.Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static dto:DownloadStatus.Downloading}}"/>
+                                        
+                                        <!-- Progress Text -->
+                                        <TextBlock Classes="Small" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                   IsVisible="{Binding Task.Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static dto:DownloadStatus.Downloading}}">
+                                            <Run Text="{Binding Task.BytesDownloaded, Converter={StaticResource FileSizeConverter}, Mode=OneWay}" />
+                                            <Run Text=" / " />
+                                            <Run Text="{Binding Task.TotalBytes, Converter={StaticResource FileSizeConverter}, Mode=OneWay}" />
+                                            <Run Text=" (" /><Run Text="{Binding Task.ProgressPercentage, StringFormat='{}{0:F0}%'}" /><Run Text=")" />
+                                        </TextBlock>
+
+                                        <!-- Error Message -->
+                                        <TextBlock Classes="Small Destructive" TextWrapping="Wrap"
+                                                   Text="{Binding Task.ErrorMessage}"
+                                                   IsVisible="{Binding Task.Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static dto:DownloadStatus.Failed}}"/>
+                                    </Panel>
+                                    
+                                    <!-- Actions Menu -->
+                                    <shadui:SimpleDropdown Grid.Row="0" Grid.RowSpan="2" Grid.Column="2" 
+                                                           VerticalAlignment="Center" Classes="Ghost"
+                                                           PopupWidth="180">
+                                        <shadui:SimpleDropdown.TriggerContent>
+                                            <icons:SymbolIcon Symbol="Command" Size="20" />
+                                        </shadui:SimpleDropdown.TriggerContent>
+                                        
+                                        <!-- Cancel Action -->
+                                        <Button Classes="Destructive" Command="{Binding CancelCommand}"
+                                                IsVisible="{Binding Task.Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static dto:DownloadStatus.Downloading}}">
+                                            <shadui:ButtonAssist.Icon>
+                                                <icons:SymbolIcon Symbol="X" Size="16"/>
+                                            </shadui:ButtonAssist.Icon>
+                                            Cancel
+                                        </Button>
+
+                                        <!-- Retry Action -->
+                                        <Button Command="{Binding RetryCommand}"
+                                                IsVisible="{Binding Task.Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static dto:DownloadStatus.Failed}}">
+                                            <shadui:ButtonAssist.Icon>
+                                                <icons:SymbolIcon Symbol="RefreshCw" Size="16"/>
+                                            </shadui:ButtonAssist.Icon>
+                                            Retry
+                                        </Button>
+                                        
+                                        <!-- Open Folder Action -->
+                                        <Button Command="{Binding $parent[UserControl].((vm:DownloadsPopupViewModel)DataContext).OpenDownloadsFolderCommand, FallbackValue={x:Null}}" CommandParameter="{Binding Task}"
+                                                IsVisible="{Binding Task.Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static dto:DownloadStatus.Completed}}">
+                                            <shadui:ButtonAssist.Icon>
+                                                <icons:SymbolIcon Symbol="Folder" Size="16"/>
+                                            </shadui:ButtonAssist.Icon>
+                                            Open Folder
+                                        </Button>
+
+                                        <Separator IsVisible="{Binding Task.Status, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter={x:Static dto:DownloadStatus.Downloading}}"/>
+                                        
+                                        <!-- Clear Action -->
+                                        <Button Classes="Destructive" Command="{Binding ClearCommand}"
+                                                IsVisible="{Binding Task.Status, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter={x:Static dto:DownloadStatus.Downloading}}">
+                                            <shadui:ButtonAssist.Icon>
+                                                <icons:SymbolIcon Symbol="Trash2" Size="16"/>
+                                            </shadui:ButtonAssist.Icon>
+                                            Clear from list
+                                        </Button>
+                                    </shadui:SimpleDropdown>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Panel>
+        </DockPanel>
+    </shadui:Card>
+</UserControl>

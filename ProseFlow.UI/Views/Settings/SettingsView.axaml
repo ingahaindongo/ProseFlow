@@ -1,0 +1,201 @@
+﻿<UserControl
+    x:Class="ProseFlow.UI.Views.Settings.SettingsView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:shadui="clr-namespace:ShadUI;assembly=ShadUI"
+    xmlns:vm="clr-namespace:ProseFlow.UI.ViewModels.Settings"
+    xmlns:icons="clr-namespace:ProseFlow.UI.Controls.Icons"
+    x:DataType="vm:SettingsViewModel">
+
+    <DockPanel LastChildFill="True">
+
+        <!-- Page Header-->
+        <StackPanel Margin="48,24" DockPanel.Dock="Top" Spacing="4">
+            <TextBlock Classes="h2" Text="General Settings" />
+            <TextBlock
+                Classes="p"
+                Text="Customize application behavior, hotkeys, and appearance."
+                TextWrapping="Wrap" />
+        </StackPanel>
+
+        <!-- Footer with Save Button -->
+        <Border
+            DockPanel.Dock="Bottom"
+            Padding="16"
+            BorderBrush="{DynamicResource BorderColor}"
+            BorderThickness="0,1,0,0">
+            <Button
+                Classes="Primary"
+                Command="{Binding SaveCommand}"
+                IsEnabled="{Binding !HasHotkeyConflict}"
+                HorizontalAlignment="Right">
+                <shadui:ButtonAssist.Icon>
+                    <icons:SymbolIcon Size="18" Symbol="Save" />
+                </shadui:ButtonAssist.Icon>
+                Save Changes
+            </Button>
+        </Border>
+
+        <!-- Scrollable Main Content -->
+        <ScrollViewer>
+            <StackPanel x:Name="MainContent" Margin="48,0,48,24" Spacing="32">
+                <!-- Hotkeys Settings Card -->
+                <shadui:Card HasShadow="True">
+                    <shadui:Card.Header>
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <icons:SymbolIcon Size="24" Symbol="Keyboard"/>
+                            <StackPanel>
+                                <shadui:CardTitle>Hotkeys</shadui:CardTitle>
+                                <shadui:CardDescription>Configure global shortcuts for key actions.</shadui:CardDescription>
+                            </StackPanel>
+                        </StackPanel>
+                    </shadui:Card.Header>
+                    <StackPanel Spacing="16">
+                        <TextBox
+                            x:Name="ActionMenuHotkeyBox"
+                            shadui:ControlAssist.Label="Action Menu Hotkey"
+                            Text="{Binding Settings.ActionMenuHotkey, FallbackValue='', Mode=OneWay}"
+                            KeyDown="HotkeyBox_OnKeyDown"
+                            GotFocus="HotkeyBox_OnGotFocus"
+                            LostFocus="HotkeyBox_OnLostFocus" />
+                        <TextBox
+                            x:Name="SmartPasteHotkeyBox"
+                            shadui:ControlAssist.Label="Smart Paste Hotkey"
+                            Text="{Binding Settings.SmartPasteHotkey, FallbackValue='', Mode=OneWay}"
+                            KeyDown="HotkeyBox_OnKeyDown"
+                            GotFocus="HotkeyBox_OnGotFocus"
+                            LostFocus="HotkeyBox_OnLostFocus" />
+                        
+                        <!-- Conflict Warning -->
+                        <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding HasHotkeyConflict}"
+                                    Margin="0, 4">
+                            <icons:SymbolIcon Size="16" Symbol="TriangleAlert" Classes="Destructive" VerticalAlignment="Center" />
+                            <TextBlock Classes="Small Destructive" VerticalAlignment="Center"
+                                       Text="Hotkey conflict detected. The Action Menu and Smart Paste hotkeys cannot be the same." />
+                        </StackPanel>
+                    </StackPanel>
+                </shadui:Card>
+
+                <!-- Behavior Settings Card -->
+                <shadui:Card HasShadow="True">
+                    <shadui:Card.Header>
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <icons:SymbolIcon Size="24" Symbol="Workflow"/>
+                            <StackPanel>
+                                <shadui:CardTitle>Behavior</shadui:CardTitle>
+                                <shadui:CardDescription>Adjust how ProseFlow works and integrates.</shadui:CardDescription>
+                            </StackPanel>
+                        </StackPanel>
+                    </shadui:Card.Header>
+                    <StackPanel Spacing="16">
+                        <ComboBox
+                            shadui:ControlAssist.Label="Smart Paste Action"
+                            shadui:ControlAssist.Hint="The default action when using the Smart Paste hotkey."
+                            DisplayMemberBinding="{Binding Name}"
+                            ItemsSource="{Binding AvailableActions}"
+                            PlaceholderText="Select an action..."
+                            SelectedItem="{Binding SelectedSmartPasteAction}" />
+                        <Separator />
+                        <ToggleSwitch IsChecked="{Binding Settings.LaunchAtLogin, FallbackValue={x:False}}" Margin="10,0,0,0">
+                            Launch ProseFlow automatically on login
+                        </ToggleSwitch>
+                    </StackPanel>
+                </shadui:Card>
+
+                <!-- Appearance Settings Card -->
+                <shadui:Card HasShadow="True">
+                    <shadui:Card.Header>
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <icons:SymbolIcon Size="24" Symbol="Palette"/>
+                            <StackPanel>
+                                <shadui:CardTitle>Appearance</shadui:CardTitle>
+                                <shadui:CardDescription>Change the look and feel of the application.</shadui:CardDescription>
+                            </StackPanel>
+                        </StackPanel>
+                    </shadui:Card.Header>
+                    <StackPanel>
+                        <ComboBox
+                            shadui:ControlAssist.Label="Theme"
+                            ItemsSource="{Binding AvailableThemes}"
+                            SelectedItem="{Binding SelectedTheme}" />
+                    </StackPanel>
+                </shadui:Card>
+                
+                <!-- Action Presets Card -->
+                <shadui:Card HasShadow="True">
+                    <shadui:Card.Header>
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <icons:SymbolIcon Size="24" Symbol="PackagePlus"/>
+                            <StackPanel>
+                                <shadui:CardTitle>Action Presets</shadui:CardTitle>
+                                <shadui:CardDescription>Import curated sets of actions to get started quickly.</shadui:CardDescription>
+                            </StackPanel>
+                        </StackPanel>
+                    </shadui:Card.Header>
+                    <ItemsControl ItemsSource="{Binding AvailablePresets}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Spacing="8" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="vm:PresetViewModel">
+                                <Border Padding="12" BorderBrush="{DynamicResource BorderColor}" BorderThickness="0,0,0,1">
+                                    <DockPanel>
+                                        <Panel DockPanel.Dock="Right">
+                                            <!-- Button for when preset is not imported -->
+                                            <Button Classes="Outline"
+                                                    Command="{Binding $parent[UserControl].((vm:SettingsViewModel)DataContext).ImportPresetCommand, FallbackValue={x:Null}}"
+                                                    CommandParameter="{Binding .}"
+                                                    IsVisible="{Binding !IsImported}">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <icons:SymbolIcon Symbol="Download" Size="16" />
+                                                    <TextBlock Text="Import" />
+                                                </StackPanel>
+                                            </Button>
+
+                                            <!-- Button for when preset is imported -->
+                                            <Button Name="ImportedButton" Classes="Outline"
+                                                    Command="{Binding $parent[UserControl].((vm:SettingsViewModel)DataContext).ImportPresetCommand, FallbackValue={x:Null}}"
+                                                    CommandParameter="{Binding .}"
+                                                    IsVisible="{Binding IsImported}">
+                                                <Button.Styles>
+                                                    <!-- When NOT hovering, hide the "Re-import" content -->
+                                                    <Style Selector="Button#ImportedButton:not(:pointerover) StackPanel.reimport-content">
+                                                        <Setter Property="IsVisible" Value="False" />
+                                                    </Style>
+                                                    <!-- When hovering, hide the "Imported" content -->
+                                                    <Style Selector="Button#ImportedButton:pointerover StackPanel.imported-content">
+                                                        <Setter Property="IsVisible" Value="False" />
+                                                    </Style>
+                                                </Button.Styles>
+                                                <Panel>
+                                                    <!-- Default "Imported" state -->
+                                                    <StackPanel Orientation="Horizontal" Spacing="8" Classes="imported-content">
+                                                        <icons:SymbolIcon Symbol="Check" Size="16" />
+                                                        <TextBlock Text="Imported" />
+                                                    </StackPanel>
+                                                    <!-- "Re-import" state on hover -->
+                                                    <StackPanel Orientation="Horizontal" Spacing="8" Classes="reimport-content">
+                                                        <icons:SymbolIcon Symbol="RefreshCw" Size="16" />
+                                                        <TextBlock Text="Re-import" />
+                                                    </StackPanel>
+                                                </Panel>
+                                            </Button>
+                                        </Panel>
+                                        
+                                        <StackPanel Spacing="2" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Preset.Name}" FontWeight="Medium" />
+                                            <TextBlock Text="{Binding Preset.Description}" Classes="Small Muted" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </shadui:Card>
+
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

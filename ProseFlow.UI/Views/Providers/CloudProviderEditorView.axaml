@@ -1,0 +1,114 @@
+﻿<shadui:Window
+    x:Class="ProseFlow.UI.Views.Providers.CloudProviderEditorView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:shadui="clr-namespace:ShadUI;assembly=ShadUI"
+    xmlns:vm="using:ProseFlow.UI.ViewModels.Providers"
+    xmlns:icons="clr-namespace:ProseFlow.UI.Controls.Icons"
+    x:DataType="vm:CloudProviderEditorViewModel"
+
+    Title="Cloud Provider Editor"
+    Icon="/Assets/logo.ico"
+    Width="500" Height="600"
+    WindowStartupLocation="CenterOwner"
+    CanResize="False"
+    ShowInTaskbar="False"
+    SaveWindowState="True"
+    IsTitleBarVisible="False"
+    Background="Transparent"
+    ShowBottomBorder="False"
+    BorderBrush="Transparent"
+    BorderThickness="0"
+    SystemDecorations="None">
+    <shadui:Card HasShadow="False">
+        <shadui:Card.Header>
+            <shadui:CardTitle>Cloud Provider Details</shadui:CardTitle>
+        </shadui:Card.Header>
+
+        <shadui:Card.Content>
+            <ScrollViewer Margin="20">
+                <StackPanel Spacing="16">
+                    <TextBox
+                        shadui:ControlAssist.Label="Configuration Name"
+                        Text="{Binding Config.Name}"
+                        Watermark="e.g., Personal OpenAI, Work Groq" />
+
+                    <ComboBox
+                        shadui:ControlAssist.Label="Provider Type"
+                        ItemsSource="{Binding AvailableProviderTypes}"
+                        SelectedItem="{Binding Config.ProviderType}" />
+
+                    <TextBox
+                        shadui:ControlAssist.Label="API Key"
+                        Classes="PasswordReveal"
+                        PasswordChar="•"
+                        Text="{Binding Config.ApiKey}"
+                        Watermark="Begins with sk-, gsk-, etc." />
+
+                    <TextBox
+                        shadui:ControlAssist.Label="Base URL (Optional)"
+                        shadui:ControlAssist.Hint="For custom/self-hosted endpoints"
+                        Text="{Binding Config.BaseUrl}"
+                        Watermark="https://api.openai.com/v1" />
+
+                    <TextBox
+                        shadui:ControlAssist.Label="Model Name"
+                        shadui:ControlAssist.Hint="e.g., gpt-4o, llama3-70b-8192"
+                        Text="{Binding Config.Model}"
+                        Watermark="gpt-4o" />
+
+                    <StackPanel>
+                        <TextBlock Text="Temperature" FontSize="16" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                            <Slider
+                                Grid.Column="0"
+                                VerticalAlignment="Center" Maximum="2" Minimum="0"
+                                TickFrequency="0.1" IsSnapToTickEnabled="True"
+                                TickPlacement="BottomRight"
+                                Value="{Binding ConfigTemperature}" />
+                            <TextBox
+                                Grid.Column="1"
+                                Text="{Binding ConfigTemperature}" />
+                        </Grid>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </shadui:Card.Content>
+
+        <shadui:Card.Footer>
+            <Grid>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Spacing="8">
+                    <TextBlock FontSize="16" Text="Status" FontWeight="Medium" VerticalAlignment="Center" />
+                    <ToggleSwitch IsChecked="{Binding Config.IsEnabled}" />
+                </StackPanel>
+
+                <StackPanel
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal"
+                    Spacing="8">
+                    <Button
+                        Classes="Outline"
+                        Command="{Binding CancelCommand}"
+                        CommandParameter="{Binding $parent[Window]}"
+                        IsCancel="True">
+                        <shadui:ButtonAssist.Icon>
+                            <icons:SymbolIcon Size="18" Symbol="X" />
+                        </shadui:ButtonAssist.Icon>
+                        Cancel
+                    </Button>
+                    <Button
+                        Classes="Primary"
+                        Command="{Binding SaveCommand}"
+                        CommandParameter="{Binding $parent[Window]}"
+                        IsDefault="True">
+                        <shadui:ButtonAssist.Icon>
+                            <icons:SymbolIcon Size="18" Symbol="Save" />
+                        </shadui:ButtonAssist.Icon>
+                        Save
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+        </shadui:Card.Footer>
+    </shadui:Card>
+</shadui:Window>

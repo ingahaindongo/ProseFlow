@@ -1,0 +1,41 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:ProseFlow.UI.Controls.Dashboard"
+        xmlns:shadUi="clr-namespace:ShadUI;assembly=ShadUI">
+    <Style Selector="controls|OverviewCard">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <shadUi:Card>
+                    <shadUi:Card.Content>
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16" VerticalAlignment="Center">
+                            <!-- Column 0: Name, Value, and Hint -->
+                            <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
+                                <TextBlock Classes="Small" Text="{TemplateBinding Title}" />
+                                <TextBlock Classes="h3" Text="{TemplateBinding Value}" />
+                                <TextBlock Classes="Caption Muted" Text="{TemplateBinding Hint}" />
+                            </StackPanel>
+
+                            <!-- Column 1: Icon -->
+                            <Viewbox Grid.Column="1" 
+                                     MaxWidth="48" 
+                                     MaxHeight="48"
+                                     HorizontalAlignment="Center"
+                                     VerticalAlignment="Center">
+                                <PathIcon Width="20" Height="20" Foreground="{x:Null}"
+                                          Data="{TemplateBinding Icon, Converter={StaticResource StringToIconConverter}}">
+                                    <PathIcon.Styles>
+                                        <Style Selector="Path">
+                                            <Setter Property="Stroke" Value="{DynamicResource PrimaryColor}" />
+                                            <Setter Property="StrokeThickness" Value="1" />
+                                        </Style>
+                                    </PathIcon.Styles>
+                                </PathIcon>
+                            </Viewbox>
+                            
+                        </Grid>
+                    </shadUi:Card.Content>
+                </shadUi:Card>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

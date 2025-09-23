@@ -1,0 +1,124 @@
+﻿<UserControl
+    x:Class="ProseFlow.UI.Views.History.HistoryView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:shadui="clr-namespace:ShadUI;assembly=ShadUI"
+    xmlns:vm="using:ProseFlow.UI.ViewModels.History"
+    xmlns:icons="clr-namespace:ProseFlow.UI.Controls.Icons"
+    x:DataType="vm:HistoryViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="shadui|Card:pointerover Expander">
+            <Setter Property="IsExpanded" Value="True" />
+        </Style>
+    </UserControl.Styles>
+    
+    <DockPanel LastChildFill="True">
+
+        <!-- Page Header -->
+        <DockPanel Margin="48,24" DockPanel.Dock="Top">
+            <Button
+                DockPanel.Dock="Right"
+                VerticalAlignment="Center"
+                Classes="Destructive"
+                Command="{Binding ClearHistoryCommand}">
+                <shadui:ButtonAssist.Icon>
+                    <icons:SymbolIcon Size="18" Symbol="Trash" />
+                </shadui:ButtonAssist.Icon>
+                Clear History
+            </Button>
+
+            <StackPanel Spacing="4">
+                <TextBlock Classes="h2" Text="Interaction History" />
+                <TextBlock
+                    Classes="p"
+                    Text="A log of your recent AI operations."
+                    TextWrapping="Wrap" />
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Scrollable Main Content -->
+        <ScrollViewer>
+            <StackPanel>
+                <!-- No History Message -->
+                <Border IsVisible="{Binding !HistoryEntries.Count}">
+                    <StackPanel Margin="0,80" Spacing="16" HorizontalAlignment="Center">
+                        <icons:SymbolIcon Size="36" Symbol="History" Width="64" Height="64" HorizontalAlignment="Center" />
+                        <TextBlock Classes="h4 Muted" Text="No History Yet" HorizontalAlignment="Center" />
+                        <TextBlock Classes="p Muted" Text="Your recent interactions will appear here." HorizontalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+
+                <ItemsControl Margin="48,0,48,24" ItemsSource="{Binding HistoryEntries}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Spacing="16" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <shadui:Card HasShadow="True">
+                                <!-- Header and summary -->
+                                <shadui:Card.Header>
+                                    <DockPanel>
+                                        <TextBlock
+                                            DockPanel.Dock="Right"
+                                            Classes="Small Muted"
+                                            Text="{Binding Timestamp, StringFormat='{}{0:g}'}" />
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <TextBlock FontWeight="Medium" Text="{Binding ActionName}" />
+                                            <TextBlock Classes="Muted" Text="·" />
+                                            <TextBlock Classes="Small Muted" Text="{Binding ProviderUsed}" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </shadui:Card.Header>
+
+                                <!-- Content Expander -->
+                                <Expander HorizontalAlignment="Stretch">
+                                    <Expander.Header>
+                                        <TextBlock Classes="Small Muted" Text="Show Details..." />
+                                    </Expander.Header>
+
+                                    <StackPanel Margin="0,12,0,0" Spacing="16">
+                                        <!-- Input Section -->
+                                        <StackPanel Spacing="8">
+                                            <TextBlock Text="Input" FontWeight="Medium" />
+                                            <Border
+                                                Padding="12"
+                                                Background="{DynamicResource GhostColor}"
+                                                CornerRadius="{DynamicResource LgCornerRadius}">
+                                                <ScrollViewer MaxHeight="150">
+                                                    <SelectableTextBlock
+                                                        Classes="Small"
+                                                        Text="{Binding InputText}"
+                                                        TextWrapping="Wrap" />
+                                                </ScrollViewer>
+                                            </Border>
+                                        </StackPanel>
+
+                                        <!-- Output Section -->
+                                        <StackPanel Spacing="8">
+                                            <TextBlock Text="Output" FontWeight="Medium" />
+                                            <Border
+                                                Padding="12"
+                                                Background="{DynamicResource GhostColor}"
+                                                CornerRadius="{DynamicResource LgCornerRadius}">
+                                                <ScrollViewer MaxHeight="250">
+                                                    <SelectableTextBlock
+                                                        Classes="Small"
+                                                        Text="{Binding OutputText}"
+                                                        TextWrapping="Wrap" />
+                                                </ScrollViewer>
+                                            </Border>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Expander>
+                            </shadui:Card>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

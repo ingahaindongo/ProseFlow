@@ -1,0 +1,81 @@
+﻿<UserControl
+    x:Class="ProseFlow.UI.Views.Dashboard.OverviewDashboardView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:ProseFlow.UI.ViewModels.Dashboard"
+    xmlns:controls="using:ProseFlow.UI.Controls.Dashboard"
+    xmlns:shadui="clr-namespace:ShadUI;assembly=ShadUI"
+    xmlns:avalonia="clr-namespace:LiveChartsCore.SkiaSharpView.Avalonia;assembly=LiveChartsCore.SkiaSharpView.Avalonia"
+    mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+    x:DataType="vm:OverviewDashboardViewModel">
+    
+    <ScrollViewer>
+        <StackPanel Spacing="24">
+            <!-- Header -->
+            <DockPanel>
+                <ComboBox DockPanel.Dock="Right" ItemsSource="{Binding DateRanges}" SelectedItem="{Binding SelectedDateRange}" Width="150" />
+            </DockPanel>
+
+            <!-- KPI Cards -->
+            <UniformGrid Columns="3" ColumnSpacing="16">
+                <controls:OverviewCard Title="Total Actions" Icon="Activity" Value="{Binding TotalActionsExecuted, StringFormat='N0'}" Hint="Cloud + Local" />
+                <controls:OverviewCard Title="Cloud Tokens" Icon="Cloud" Value="{Binding TotalCloudTokens, StringFormat='N0'}" Hint="In selected period" />
+                <controls:OverviewCard Title="Local Tokens" Icon="HardDrive" Value="{Binding TotalLocalTokens, StringFormat='N0'}" Hint="In selected period" />
+            </UniformGrid>
+            
+            <!-- Main Grid -->
+            <Grid ColumnDefinitions="2*, 1*" ColumnSpacing="16">
+                <!-- Left: Chart -->
+                <shadui:Card Grid.Column="0">
+                    <shadui:Card.Header>
+                        <shadui:CardTitle>Usage Over Time (Combined)</shadui:CardTitle>
+                    </shadui:Card.Header>
+                    <avalonia:CartesianChart Series="{Binding Series}" XAxes="{Binding XAxes}" YAxes="{Binding YAxes}" Height="300" Margin="12,0,12,12" LegendPosition="Bottom" />
+                </shadui:Card>
+                
+                <!-- Right: Status & Recents -->
+                <StackPanel Grid.Column="1" Spacing="16">
+                    <shadui:Card>
+                        <shadui:Card.Header>
+                            <shadui:CardTitle>Local Model</shadui:CardTitle>
+                        </shadui:Card.Header>
+                        <shadui:Card.Content>
+                            <StackPanel Spacing="8">
+                                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                    <Ellipse Width="10" Height="10" Fill="{Binding LocalModelStatus, Converter={StaticResource StatusToColorConverter}}" />
+                                    <TextBlock Text="{Binding LocalModelStatus}" FontWeight="Medium" />
+                                </StackPanel>
+                                <TextBlock Text="{Binding LocalModelName}" Classes="Muted" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </shadui:Card.Content>
+                        <shadui:Card.Footer>
+                            <Button Classes="Primary"
+                                    shadui:ButtonAssist.ShowProgress="{Binding IsModelLoading}"
+                                    Command="{Binding ToggleLocalModelCommand}">
+                                <TextBlock Text="{Binding LocalModelStatus, Converter={StaticResource StatusToButtonTextConverter}}" />
+                            </Button>
+                        </shadui:Card.Footer>
+                    </shadui:Card>
+                    
+                    <shadui:Card>
+                        <shadui:Card.Header>
+                            <shadui:CardTitle>Recent Activity</shadui:CardTitle>
+                        </shadui:Card.Header>
+                        <ItemsControl ItemsSource="{Binding RecentActivity}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <DockPanel Margin="0,6">
+                                        <TextBlock DockPanel.Dock="Right" Classes="Small Muted" Text="{Binding Timestamp, Converter={StaticResource RelativeTimeConverter}}" />
+                                        <TextBlock Text="{Binding ActionName}" />
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </shadui:Card>
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

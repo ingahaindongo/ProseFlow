@@ -1,0 +1,189 @@
+﻿<UserControl
+    x:Class="ProseFlow.UI.Views.Dashboard.LocalDashboardView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:ProseFlow.UI.ViewModels.Dashboard"
+    xmlns:controls="using:ProseFlow.UI.Controls.Dashboard"
+    xmlns:shadui="clr-namespace:ShadUI;assembly=ShadUI"
+    xmlns:avalonia="clr-namespace:LiveChartsCore.SkiaSharpView.Avalonia;assembly=LiveChartsCore.SkiaSharpView.Avalonia"
+    xmlns:b="clr-namespace:ProseFlow.UI.Behaviors"
+    xmlns:core="using:ProseFlow.Core.Models"
+    mc:Ignorable="d" MinWidth="800" MinHeight="600"
+    x:DataType="vm:LocalDashboardViewModel">
+
+    <UserControl.Styles>
+        <!-- Style for the sidebar section headers (e.g., "SYSTEM", "GRAPHICS") -->
+        <Style Selector="TextBlock.SidebarSectionHeader">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Opacity" Value="0.7" />
+            <Setter Property="Margin" Value="0,12,0,4" />
+        </Style>
+    </UserControl.Styles>
+
+    <!-- Main two-column layout -->
+    <Grid ColumnDefinitions="*, 320">
+
+        <!-- Column 0: Main Scrollable Content Area -->
+        <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Visible" VerticalContentAlignment="Stretch"
+                      VerticalAlignment="Top">
+            <StackPanel Margin="24" Spacing="24">
+                <!-- Header -->
+                <DockPanel>
+                    <ComboBox DockPanel.Dock="Right" ItemsSource="{Binding DateRanges}"
+                              SelectedItem="{Binding SelectedDateRange}" Width="150" />
+                </DockPanel>
+
+                <!-- KPI Cards -->
+                <UniformGrid Columns="2" ColumnSpacing="16">
+                    <controls:OverviewCard Title="Total Local Tokens" Icon="HardDrive"
+                                           Value="{Binding TotalLocalTokens, StringFormat='N0'}" />
+                    <controls:OverviewCard Title="Total Local Actions" Icon="Activity"
+                                           Value="{Binding TotalLocalActions, StringFormat='N0'}" />
+                </UniformGrid>
+
+                <!-- Analysis Section -->
+                <Grid ColumnDefinitions="2*,*" ColumnSpacing="16">
+
+                    <!-- Column 0: Tabbed view for Chart and Logs -->
+                    <shadui:Card Grid.Column="0" MinHeight="380">
+                        <TabControl>
+                            <TabItem Header="Usage Chart">
+                                <avalonia:CartesianChart Series="{Binding Series}" XAxes="{Binding XAxes}"
+                                                         YAxes="{Binding YAxes}"
+                                                         Height="300" Margin="12,0,12,12" LegendPosition="Bottom" />
+                            </TabItem>
+                            <TabItem Header="Model Log">
+                                <ScrollViewer Margin="12,0,12,12" b:AutoScrollBehavior.IsEnabled="True" Height="300">
+                                    <Grid>
+                                        <ItemsControl ItemsSource="{Binding LlmLogs}"
+                                                      IsVisible="{Binding LlmLogs.Count, Converter={StaticResource ConditionCheckConverter}, ConverterParameter='0|False|True'}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate DataType="core:LogEntry">
+                                                    <Grid ColumnDefinitions="Auto,Auto,*" Margin="0,2">
+                                                        <Grid.Styles>
+                                                            <Style Selector="TextBlock, SelectableTextBlock">
+                                                                <Setter Property="Foreground"
+                                                                        Value="{Binding Level, Converter={StaticResource LogLevelToColorConverter}}"/>
+                                                            </Style>
+                                                        </Grid.Styles>
+                                                        
+                                                        <TextBlock Grid.Column="0"
+                                                                   Text="{Binding Timestamp, StringFormat='HH:mm:ss'}"
+                                                                   Classes="Small Muted" Margin="0,0,12,0" />
+                                                        <TextBlock Grid.Column="1" Text="{Binding Level}"
+                                                                   FontWeight="Bold" Margin="0,0,12,0" />
+                                                        <SelectableTextBlock Grid.Column="2" Text="{Binding Message}"
+                                                                             TextWrapping="Wrap" Classes="Code Small" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+
+                                        <!-- If there are no logs, show a message -->
+                                        <TextBlock Text="No logs found, local model is not running." Classes="h3" Opacity="0.5" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                   IsVisible="{Binding LlmLogs.Count, Converter={StaticResource ConditionCheckConverter}, ConverterParameter='0|True|False'}" />
+                                    </Grid>
+                                </ScrollViewer>
+                            </TabItem>
+                        </TabControl>
+                    </shadui:Card>
+
+                    <!-- Column 1: Top Actions DataGrid -->
+                    <shadui:Card Grid.Column="1">
+                        <shadui:Card.Header>
+                            <shadui:CardTitle Content="Top Local Actions" />
+                        </shadui:Card.Header>
+                        <DataGrid ItemsSource="{Binding TopLocalActions}" AutoGenerateColumns="False"
+                                  CanUserReorderColumns="False" IsReadOnly="True" GridLinesVisibility="Horizontal">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Action" Binding="{Binding ActionName}" Width="*" />
+                                <DataGridTextColumn Header="Uses" Binding="{Binding UsageCount}" Width="Auto" />
+                                <DataGridTextColumn Header="Avg Tokens"
+                                                    Binding="{Binding AverageTokens, StringFormat='N0'}" Width="Auto" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </shadui:Card>
+                </Grid>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Column 1: Hardware Monitor Sidebar -->
+        <Border Grid.Column="1"
+                BorderThickness="1,0,0,0"
+                BorderBrush="{DynamicResource BorderColor}">
+            <ScrollViewer>
+                <StackPanel Margin="16" Spacing="16">
+                    <!-- System Section -->
+                    <TextBlock Text="System" Classes="SidebarSectionHeader" />
+                    <StackPanel Spacing="8">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <TextBlock Text="CPU Usage" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Text="{Binding CpuUsagePercent,  StringFormat='{}{0}%'}"
+                                       FontWeight="SemiBold" />
+                        </Grid>
+                        <ProgressBar Value="{Binding CpuUsagePercent}" Maximum="100" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="8">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <TextBlock Text="RAM Usage" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" FontWeight="SemiBold">
+                                <Run Text="{Binding RamUsageGb, StringFormat='F1'}" /><Run Text=" / " />
+                                <Run Text="{Binding TotalRamGb, StringFormat='F1'}" /><Run Text=" GB" />
+                            </TextBlock>
+                        </Grid>
+                        <ProgressBar Value="{Binding RamUsagePercent}" Maximum="100" />
+                    </StackPanel>
+
+                    <!-- Graphics Section -->
+                    <Separator Margin="0,8" />
+                    <TextBlock Text="Graphics" Classes="SidebarSectionHeader" />
+
+                    <StackPanel Spacing="8">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <TextBlock Text="GPU Usage" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Text="{Binding GpuUsagePercent, StringFormat='{}{0}%'}"
+                                       FontWeight="SemiBold" />
+                        </Grid>
+                        <ProgressBar Value="{Binding GpuUsagePercent}" Maximum="100" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="8">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <TextBlock Text="VRAM Usage" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" FontWeight="SemiBold">
+                                <Run Text="{Binding VramUsageGb, StringFormat='F1'}" /><Run Text=" / " />
+                                <Run Text="{Binding TotalVramGb, StringFormat='F1'}" /><Run Text=" GB" />
+                            </TextBlock>
+                        </Grid>
+                        <ProgressBar Value="{Binding VramUsagePercent}" Maximum="100" />
+                        <Grid ColumnDefinitions="*,*" Margin="0,4,0,0">
+                            <TextBlock Opacity="0.7">
+                                <Run Text="Used: " /><Run Text="{Binding VramUsageGb, StringFormat='F1'}" />
+                                <Run Text=" GB" />
+                            </TextBlock>
+                            <TextBlock Grid.Column="1" Opacity="0.7" HorizontalAlignment="Right">
+                                <Run Text="Free: " /><Run Text="{Binding VramFreeGb, StringFormat='F1'}" />
+                                <Run Text=" GB" />
+                            </TextBlock>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- Inference Section -->
+                    <Separator Margin="0,8" />
+                    <TextBlock Text="Inference" Classes="SidebarSectionHeader" />
+                    <StackPanel Spacing="8">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <TextBlock Text="Avg. Inference Speed" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Text="{Binding InferenceSpeed}" FontWeight="SemiBold" />
+                        </Grid>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</UserControl>

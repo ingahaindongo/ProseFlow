@@ -1,0 +1,43 @@
+﻿<UserControl x:Class="ProseFlow.UI.Views.Onboarding.HotkeyTutorialView"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:ProseFlow.UI.ViewModels.Onboarding"
+             xmlns:shadui="clr-namespace:ShadUI;assembly=ShadUI"
+             xmlns:icons="clr-namespace:ProseFlow.UI.Controls.Icons"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:DataType="vm:HotkeyTutorialViewModel">
+
+    <StackPanel Spacing="16" TextBlock.TextAlignment="Center">
+        <TextBlock Classes="h3" Text="{Binding HeaderText}" TextWrapping="Wrap" />
+        <TextBlock Classes="Small" Text="{Binding InstructionText}" TextWrapping="Wrap" />
+
+        <Border Classes="Keybind" Padding="12, 8" CornerRadius="{DynamicResource MdCornerRadius}">
+            <TextBlock Classes="h4" Text="{Binding ConfiguredHotkey}" />
+        </Border>
+
+        <TextBox Text="{Binding SampleText}" TextAlignment="Center" MinHeight="100" TextWrapping="Wrap"
+                 Margin="24, 0" />
+
+        <Panel IsVisible="{Binding ShowSimulatedMenu}" HorizontalAlignment="Center">
+            <shadui:Card Padding="4" HasShadow="True">
+                <StackPanel>
+                    <Button Classes="Ghost" HorizontalContentAlignment="Left"
+                            Command="{Binding SimulateFixCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <icons:SymbolIcon Symbol="SquarePen" Size="16" />
+                            <TextBlock Text="Proofread &amp; Fix Grammar" />
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="Ghost" HorizontalContentAlignment="Left" IsEnabled="False">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <icons:SymbolIcon Symbol="MessageSquareText" Size="16" />
+                            <TextBlock Text="Summarize Text" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </shadui:Card>
+        </Panel>
+    </StackPanel>
+</UserControl>

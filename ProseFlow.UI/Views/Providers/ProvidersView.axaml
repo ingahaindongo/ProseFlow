@@ -1,0 +1,345 @@
+﻿<UserControl
+    x:Class="ProseFlow.UI.Views.Providers.ProvidersView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:b="using:ProseFlow.UI.Behaviors"
+    xmlns:shadui="clr-namespace:ShadUI;assembly=ShadUI"
+    xmlns:vm="using:ProseFlow.UI.ViewModels.Providers"
+    xmlns:local="clr-namespace:ProseFlow.Infrastructure.Services.AiProviders.Local;assembly=ProseFlow.Infrastructure"
+    xmlns:core="using:ProseFlow.Core.Models"
+    xmlns:icons="clr-namespace:ProseFlow.UI.Controls.Icons"
+    x:DataType="vm:ProvidersViewModel">
+
+    <DockPanel LastChildFill="True">
+
+        <!-- Page Header -->
+        <StackPanel Margin="48,24" DockPanel.Dock="Top" Spacing="4">
+            <TextBlock Classes="h2" Text="AI Providers" />
+            <TextBlock
+                Classes="p"
+                Text="Configure your AI models, both cloud-based and local."
+                TextWrapping="Wrap" />
+        </StackPanel>
+
+        <!-- Footer with Save Button -->
+        <Border
+            DockPanel.Dock="Bottom"
+            Padding="16"
+            BorderBrush="{DynamicResource BorderColor}"
+            BorderThickness="0,1,0,0">
+            <Button
+                Classes="Primary"
+                Command="{Binding SaveCommand}"
+                HorizontalAlignment="Right">
+                <shadui:ButtonAssist.Icon>
+                    <icons:SymbolIcon Size="18" Symbol="Save" />
+                </shadui:ButtonAssist.Icon>
+                Save Provider Settings
+            </Button>
+        </Border>
+
+        <!-- Scrollable Main Content -->
+        <ScrollViewer>
+            <StackPanel Margin="48,0,48,24" Spacing="32">
+
+                <!-- Cloud Provider Fallback Chain -->
+                <shadui:Card HasShadow="True">
+                    <shadui:Card.Header>
+                        <DockPanel>
+                            <Button Classes="Primary" DockPanel.Dock="Right" VerticalAlignment="Top"
+                                    Command="{Binding AddProviderCommand}">
+                                <shadui:ButtonAssist.Icon>
+                                    <icons:SymbolIcon Size="24" Symbol="Plus" />
+                                </shadui:ButtonAssist.Icon>
+                                Add Provider
+                            </Button>
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <icons:SymbolIcon Size="24" Symbol="Cable" />
+                                <StackPanel>
+                                    <shadui:CardTitle>Cloud Provider Fallback Chain</shadui:CardTitle>
+                                    <shadui:CardDescription>Add and reorder providers. They will be tried from top to bottom.</shadui:CardDescription>
+                                </StackPanel>
+                            </StackPanel>
+                        </DockPanel>
+                    </shadui:Card.Header>
+                    <DataGrid
+                        b:DataGridDragDropBehavior.ReorderCommand="{Binding ReorderProviderCommand}"
+                        AutoGenerateColumns="False"
+                        CanUserReorderColumns="False" CanUserResizeColumns="True" CanUserSortColumns="False"
+                        GridLinesVisibility="Horizontal" IsReadOnly="True"
+                        ItemsSource="{Binding CloudProviders}">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Width="40">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <icons:SymbolIcon Size="18" Symbol="MoveVertical"
+                                                    ToolTip.Tip="Drag and drop to reorder providers." />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Width="40" Binding="{Binding SortOrder}" Header="#" />
+                            <DataGridTextColumn Width="*" MinWidth="160" Binding="{Binding Name}"
+                                                Header="Configuration Name" />
+                            <DataGridTextColumn Width="80" Binding="{Binding IsEnabled}" Header="Enabled" />
+                            <DataGridTextColumn Width="150" MinWidth="85" Binding="{Binding ProviderType}"
+                                                Header="Provider" />
+                            <DataGridTextColumn Width="200" MinWidth="85" Binding="{Binding Model}" Header="Model" />
+                            <DataGridTemplateColumn Width="120" Header="Actions">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                                            <Button Classes="Ghost" ToolTip.Tip="Edit Provider"
+                                                    Command="{Binding $parent[UserControl].((vm:ProvidersViewModel)DataContext).EditProviderCommand, FallbackValue={x:Null}}"
+                                                    CommandParameter="{Binding .}">
+                                                <icons:SymbolIcon Size="18" Symbol="Pen" />
+                                            </Button>
+                                            <Button Classes="Ghost Destructive" ToolTip.Tip="Delete Provider"
+                                                    Command="{Binding $parent[UserControl].((vm:ProvidersViewModel)DataContext).DeleteProviderCommand, FallbackValue={x:Null}}"
+                                                    CommandParameter="{Binding .}">
+                                                <icons:SymbolIcon Size="18" Symbol="Trash2" />
+                                            </Button>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </shadui:Card>
+
+
+                <!-- Local Provider Settings -->
+                <shadui:Card HasShadow="True">
+                    <shadui:Card.Header>
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <icons:SymbolIcon Size="24" Symbol="Laptop" />
+                            <StackPanel>
+                                <shadui:CardTitle>Local Provider</shadui:CardTitle>
+                                <shadui:CardDescription>Run models locally on your machine (via llama.cpp/LlamaSharp project).</shadui:CardDescription>
+                            </StackPanel>
+                        </StackPanel>
+                    </shadui:Card.Header>
+
+                    <StackPanel Spacing="16">
+                        <!-- Model Path Selection -->
+                        <StackPanel Spacing="8">
+                            <Grid ColumnDefinitions="*, Auto" ColumnSpacing="8">
+                                <ComboBox
+                                    shadui:ControlAssist.Label="Selected Model"
+                                    ItemsSource="{Binding LocalModels}"
+                                    SelectedItem="{Binding SelectedModel}"
+                                    PlaceholderText="No model selected. Click 'Manage Models' to add one.">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate DataType="core:LocalModel">
+                                            <TextBlock Text="{Binding Name}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <Button
+                                    Grid.Column="1"
+                                    VerticalAlignment="Bottom"
+                                    Classes="Outline"
+                                    Command="{Binding ManageModelsCommand}"
+                                    Content="Manage Models..." />
+                            </Grid>
+
+                            <!-- Resource Warning Message -->
+                            <Border Classes="Warning" IsVisible="{Binding IsResourceWarningVisible}" Padding="12"
+                                    CornerRadius="{DynamicResource MdCornerRadius}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <icons:SymbolIcon Symbol="TriangleAlert" Size="16" VerticalAlignment="Top" />
+                                    <TextBlock Text="{Binding ResourceWarningMessage}" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- GPU and CPU Settings -->
+                        <StackPanel Spacing="8" Margin="8,0">
+                            <ToggleSwitch IsChecked="{Binding PreferGpu, FallbackValue={x:False}}">
+                                Prefer GPU acceleration (if available)
+                            </ToggleSwitch>
+
+                            <ToggleSwitch
+                                IsChecked="{Binding Settings.LocalModelLoadOnStartup, FallbackValue={x:False}}">
+                                Load Model on Startup
+                            </ToggleSwitch>
+
+                            <ToggleSwitch
+                                IsChecked="{Binding Settings.LocalModelAutoUnloadEnabled, FallbackValue={x:True}}"
+                                ToolTip.Tip="Automatically unload the model from memory after a period of inactivity to free up system resources.">
+                                Auto-unload idle model
+                            </ToggleSwitch>
+
+                            <ToggleSwitch
+                                IsChecked="{Binding Settings.LocalModelMemoryMap, FallbackValue={x:False}}"
+                                ToolTip.Tip="Enables faster model startup by loading parts of the model on demand. For best performance, keep this enabled unless you have enough RAM to hold the entire model and are experiencing slowdowns from memory swapping.">
+                                Use Memory Mapping
+                            </ToggleSwitch>
+
+                            <ToggleSwitch
+                                IsChecked="{Binding Settings.LocalModelMemorylock, FallbackValue={x:False}}"
+                                ToolTip.Tip="Prevents the model from being swapped to disk, ensuring stable and fast performance. This is highly recommended but requires that your system has enough available RAM to hold the entire model.">
+                                Lock Model in Memory"
+                            </ToggleSwitch>
+                        </StackPanel>
+
+                        <!-- Auto-unload timeout setting -->
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16" Margin="8,0"
+                              IsEnabled="{Binding Settings.LocalModelAutoUnloadEnabled, FallbackValue={x:True}}">
+                            <TextBlock Text="Idle Timeout (minutes)" VerticalAlignment="Center" />
+                            <TextBox Grid.Column="1" Width="150"
+                                     Text="{Binding Settings.LocalModelIdleTimeoutMinutes, Mode=TwoWay, Converter={StaticResource NumericStringConverter}}" />
+                        </Grid>
+
+                        <!-- Temperature Control -->
+                        <StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="Temperature"
+                                           ToolTip.Tip="Controls the creativity of the model's output" />
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                                    <Slider Grid.Column="0" VerticalAlignment="Center" Maximum="2" Minimum="0"
+                                            TickFrequency="0.1" IsSnapToTickEnabled="True"
+                                            TickPlacement="BottomRight"
+                                            Value="{Binding LocalTemp, Mode=TwoWay}" />
+                                    <TextBox Grid.Column="1" Width="150"
+                                             Text="{Binding LocalTemp, Mode=TwoWay, Converter={StaticResource NumericStringConverter}, ConverterParameter='F2'}" />
+                                </Grid>
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="Context Length" ToolTip.Tip="Number of tokens to keep in context" />
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                                    <Slider Grid.Column="0" VerticalAlignment="Center" Maximum="64000" Minimum="0"
+                                            TickFrequency="1000" IsSnapToTickEnabled="True"
+                                            TickPlacement="BottomRight"
+                                            Value="{Binding LocalContextSize, Mode=TwoWay}" />
+                                    <TextBox Grid.Column="1" Width="150"
+                                             Text="{Binding LocalContextSize, Mode=TwoWay, Converter={StaticResource NumericStringConverter}}" />
+                                </Grid>
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="Max Tokens"
+                                           ToolTip.Tip="Maximum number of tokens to generate per request" />
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                                    <Slider Grid.Column="0" VerticalAlignment="Center" Maximum="64000" Minimum="0"
+                                            TickFrequency="1000" IsSnapToTickEnabled="True"
+                                            TickPlacement="BottomRight"
+                                            Value="{Binding LocalMaxTokens, Mode=TwoWay}" />
+                                    <TextBox Grid.Column="1" Width="150"
+                                             Text="{Binding LocalMaxTokens, Mode=TwoWay, Converter={StaticResource NumericStringConverter}}" />
+                                </Grid>
+                            </StackPanel>
+                        </StackPanel>
+                        <Separator />
+
+                        <!-- Model Management and Status -->
+                        <Grid ColumnDefinitions="Auto, *" ColumnSpacing="16" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button
+                                    shadui:ButtonAssist.ShowProgress="{Binding ManagerStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static local:ModelStatus.Loading}}"
+                                    Classes="Primary" Command="{Binding LoadLocalModelCommand}"
+                                    IsEnabled="{Binding !IsManagerLoaded}">
+                                    Load Model
+                                </Button>
+                                <Button Classes="Outline" Command="{Binding UnloadLocalModelCommand}"
+                                        IsEnabled="{Binding IsManagerLoaded}">
+                                    Unload Model
+                                </Button>
+                            </StackPanel>
+
+                            <Panel Grid.Column="1" VerticalAlignment="Center">
+                                <StackPanel Spacing="8" Orientation="Horizontal"
+                                            IsVisible="{Binding ManagerStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static local:ModelStatus.Unloaded}}">
+                                    <icons:SymbolIcon Size="18" Symbol="CircleAlert" />
+                                    <TextBlock Classes="Muted" Text="Model is not loaded." VerticalAlignment="Center" />
+                                </StackPanel>
+                                <StackPanel Spacing="8" Orientation="Horizontal"
+                                            IsVisible="{Binding ManagerStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static local:ModelStatus.Loading}}">
+                                    <icons:SymbolIcon Size="18" Symbol="Loader" />
+                                    <ProgressBar Value="{Binding ModelLoadingProgress}" ShowProgressText="True"
+                                                 CornerRadius="16" />
+                                    <TextBlock Text="Loading model, please wait..." VerticalAlignment="Center" />
+                                </StackPanel>
+                                <StackPanel Spacing="8" Orientation="Horizontal"
+                                            IsVisible="{Binding ManagerStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static local:ModelStatus.Loaded}}">
+                                    <icons:SymbolIcon Size="18" Symbol="Check" />
+                                    <TextBlock Classes="Success" Text="Model is loaded and ready."
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                                <StackPanel Spacing="8" Orientation="Horizontal"
+                                            IsVisible="{Binding ManagerStatus, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static local:ModelStatus.Error}}">
+                                    <icons:SymbolIcon Size="18" Symbol="TriangleAlert" />
+                                    <TextBlock Classes="Destructive" Text="{Binding ManagerErrorMessage}"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Panel>
+                        </Grid>
+                    </StackPanel>
+                </shadui:Card>
+
+                <!-- Provider Switching Logic -->
+                <shadui:Card HasShadow="True">
+                    <shadui:Card.Header>
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <icons:SymbolIcon Size="24" Symbol="CableCar" />
+                            <StackPanel>
+                                <shadui:CardTitle>Service Type Logic</shadui:CardTitle>
+                                <shadui:CardDescription>Configure the high-level fallback between Cloud and Local services.</shadui:CardDescription>
+                            </StackPanel>
+                        </StackPanel>
+                    </shadui:Card.Header>
+                    <StackPanel Spacing="16">
+                        <ComboBox
+                            shadui:ControlAssist.Label="Primary Service Type"
+                            shadui:ControlAssist.Hint="The default service to use for all actions."
+                            ItemsSource="{Binding AvailableServiceTypes}"
+                            SelectedItem="{Binding Settings.PrimaryServiceType, FallbackValue=''}" />
+                        <ComboBox
+                            shadui:ControlAssist.Label="Fallback Service Type"
+                            shadui:ControlAssist.Hint="Used if the primary service type is unavailable."
+                            ItemsSource="{Binding AvailableFallbackServiceTypes}"
+                            SelectedItem="{Binding Settings.FallbackServiceType, FallbackValue=''}" />
+                    </StackPanel>
+                </shadui:Card>
+
+
+                <!-- Cloud Usage Tracking -->
+                <shadui:Card HasShadow="True">
+                    <shadui:Card.Header>
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <icons:SymbolIcon Size="24" Symbol="CalendarCheck" />
+                            <StackPanel>
+                                <shadui:CardTitle>Cloud Usage Tracking</shadui:CardTitle>
+                                <shadui:CardDescription>Aggregated token usage for the current month. Resets automatically.</shadui:CardDescription>
+                            </StackPanel>
+                        </StackPanel>
+                    </shadui:Card.Header>
+                    <StackPanel Spacing="16">
+                        <Grid ColumnDefinitions="*,*,*">
+                            <StackPanel Spacing="4">
+                                <TextBlock Classes="Small Muted" Text="Prompt Tokens" />
+                                <TextBlock Classes="h3" Text="{Binding PromptTokens, StringFormat='N0'}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Spacing="4">
+                                <TextBlock Classes="Small Muted" Text="Completion Tokens" />
+                                <TextBlock Classes="h3" Text="{Binding CompletionTokens, StringFormat='N0'}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Spacing="4">
+                                <TextBlock Classes="Small Muted" Text="Total Tokens" />
+                                <TextBlock Classes="h3" Text="{Binding TotalTokens, StringFormat='N0'}" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                    <shadui:Card.Footer>
+                        <Button
+                            Classes="Outline Destructive"
+                            HorizontalAlignment="Left"
+                            Command="{Binding ResetUsageCommand}"
+                            ToolTip.Tip="Reset the usage counters for the current month to zero. This cannot be undone.">
+                            Reset Counter
+                        </Button>
+                    </shadui:Card.Footer>
+                </shadui:Card>
+
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

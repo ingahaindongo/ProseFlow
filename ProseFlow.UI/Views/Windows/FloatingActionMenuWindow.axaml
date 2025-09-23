@@ -1,0 +1,243 @@
+<shadui:Window
+    x:Class="ProseFlow.UI.Views.Windows.FloatingActionMenuWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="using:ProseFlow.UI.Converters"
+    xmlns:shadui="clr-namespace:ShadUI;assembly=ShadUI"
+    xmlns:vm="using:ProseFlow.UI.ViewModels.Windows"
+    xmlns:actions="clr-namespace:ProseFlow.UI.ViewModels.Actions"
+    xmlns:icons="clr-namespace:ProseFlow.UI.Controls.Icons"
+    x:DataType="vm:FloatingActionMenuViewModel"
+
+    Width="500" SizeToContent="Height"
+    SystemDecorations="None" CanResize="False" ShowInTaskbar="False" Topmost="True"
+    WindowStartupLocation="Manual"
+    IsTitleBarVisible="False"
+    Background="Transparent"
+    ShowBottomBorder="False"
+    BorderBrush="Transparent"
+    BorderThickness="0"
+    ShowActivated="True"
+
+    Opened="OnWindowOpened" KeyDown="OnWindowKeyDown" Deactivated="WindowBase_OnDeactivated">
+
+    <Window.Resources>
+        <c:StringToIconConverter x:Key="StringToIconConverter" />
+    </Window.Resources>
+
+    <shadui:Card Padding="0" HasShadow="True">
+        <DockPanel>
+            <!-- Search Bar Area -->
+            <Border DockPanel.Dock="Top" Padding="12,12,12,8" IsVisible="{Binding !IsCustomInstructionActive}">
+                <TextBox
+                    Name="SearchBox"
+                    shadui:ElementAssist.FocusOnLoad="True"
+                    Classes="Clearable"
+                    Text="{Binding SearchText, Mode=TwoWay}"
+                    Watermark="Find an action...">
+                    <TextBox.InnerRightContent>
+                        <PathIcon
+                            Width="16"
+                            Data="{x:Static shadui:Icons.Search}"
+                            Opacity="0.75" />
+                    </TextBox.InnerRightContent>
+                </TextBox>
+            </Border>
+
+            <!-- Footer Area -->
+            <Border
+                DockPanel.Dock="Bottom"
+                Padding="12,8"
+                BorderBrush="{DynamicResource BorderColor}"
+                BorderThickness="0,1,0,0">
+                <DockPanel>
+                    <Button
+                        DockPanel.Dock="Left"
+                        Classes="Ghost"
+                        Command="{Binding ToggleServiceTypeCommand}"
+                        ToolTip.Tip="Toggle AI Service Type for this run">
+                        <shadui:ButtonAssist.Icon>
+                            <icons:SymbolIcon Size="18" Symbol="Globe" />
+                        </shadui:ButtonAssist.Icon>
+                        <TextBlock Classes="Small" Text="{Binding CurrentServiceTypeName}" Margin="4,0,0,0" />
+                    </Button>
+                    <Button
+                        DockPanel.Dock="Left"
+                        Classes="Ghost"
+                        Command="{Binding ToggleResultContainerCommand}"
+                        ToolTip.Tip="Toggle the Final form of the result">
+                        <shadui:ButtonAssist.Icon>
+                            <icons:SymbolIcon Size="18" Symbol="AppWindow" />
+                        </shadui:ButtonAssist.Icon>
+                        <TextBlock Classes="Small" Text="{Binding ResultContainer}" Margin="4,0,0,0" />
+                    </Button>
+                    <ToggleButton
+                        DockPanel.Dock="Left"
+                        Classes="Ghost"
+                        IsChecked="{Binding IsCustomInstructionActive}"
+                        ToolTip.Tip="Toggle between Action List and Custom Instruction">
+                        <StackPanel Orientation="Horizontal" Margin="8" Spacing="4">
+                            <icons:SymbolIcon Size="18" Symbol="Sparkles" />
+                            <TextBlock Classes="Small" Text="Custom Instruction" />
+                        </StackPanel>
+                    </ToggleButton>
+                    <Button
+                        HorizontalAlignment="Right"
+                        Classes="Ghost"
+                        Command="{Binding OpenSettingsCommand}"
+                        ToolTip.Tip="Open Settings">
+                        <shadui:ButtonAssist.Icon>
+                            <icons:SymbolIcon Size="18" Symbol="Settings" />
+                        </shadui:ButtonAssist.Icon>
+                    </Button>
+                </DockPanel>
+            </Border>
+
+            <!-- Main Content Area -->
+            <Grid>
+                <!-- Action List with ScrollViewer -->
+                <ScrollViewer
+                    Name="ActionListScrollViewer"
+                    IsVisible="{Binding !IsCustomInstructionActive}"
+                    MaxHeight="300"
+                    Padding="8,8"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding ActionGroups}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Margin="8" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="actions:ActionGroupViewModel">
+                                <StackPanel Margin="0,4">
+                                    <!-- Group Header -->
+                                    <Border
+                                        Name="GroupHeader"
+                                        Padding="8,8,8,4"
+                                        Margin="0,2"
+                                        CornerRadius="{DynamicResource MdCornerRadius}"
+                                        Classes.IsSelected="{Binding IsSelected}">
+                                        <Border.Styles>
+                                            <Style Selector="Border.IsSelected">
+                                                <Setter Property="Background" Value="{DynamicResource GhostHoverColor}" />
+                                            </Style>
+                                        </Border.Styles>
+                                        <DockPanel VerticalAlignment="Center">
+                                            <!-- Selection Indicator -->
+                                            <TextBlock
+                                                Text="{Binding IsExpanded, Converter={StaticResource ConditionCheckConverter}, ConverterParameter='true|v |> '}"
+                                                FontSize="14" FontWeight="Bold" VerticalAlignment="Center"
+                                                IsVisible="{Binding IsSelected}" />
+
+                                            <!-- Expander Icon -->
+                                            <TextBlock DockPanel.Dock="Left" Width="12"
+                                                       IsVisible="{Binding !IsSelected}"
+                                                       Text="{Binding IsExpanded, Converter={StaticResource ConditionCheckConverter}, ConverterParameter='true|v |> '}"
+                                                       Classes="Small Muted" FontWeight="SemiBold"
+                                                       VerticalAlignment="Center" />
+
+                                            <!-- Group Name -->
+                                            <TextBlock Text="{Binding Name}" Classes="Small Muted"
+                                                       FontWeight="SemiBold"
+                                                       Margin="4,0,0,0" VerticalAlignment="Center" />
+                                        </DockPanel>
+                                    </Border>
+
+                                    <!-- Actions within Group -->
+                                    <ItemsControl IsVisible="{Binding IsExpanded}" ItemsSource="{Binding Actions}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="actions:ActionItemViewModel">
+                                                <Button
+                                                    Name="ActionButton"
+                                                    HorizontalContentAlignment="Stretch"
+                                                    Padding="8"
+                                                    Margin="0,2"
+                                                    Classes="ListItem"
+                                                    IsVisible="True"
+                                                    ClickMode="Press"
+                                                    Click="ActionButton_OnPointerPressed"
+                                                    Classes.IsSelected="{Binding IsSelected}">
+
+                                                    <Button.Styles>
+                                                        <Style Selector="Button.ListItem">
+                                                            <Setter Property="Background" Value="Transparent" />
+                                                            <Setter Property="BorderThickness" Value="0" />
+                                                            <Setter Property="CornerRadius"
+                                                                    Value="{DynamicResource MdCornerRadius}" />
+                                                        </Style>
+                                                        <Style Selector="Button.ListItem.IsSelected">
+                                                            <Setter Property="Background"
+                                                                    Value="{DynamicResource GhostHoverColor}" />
+                                                        </Style>
+                                                        <Style
+                                                            Selector="Button.ListItem:pointerover /template/ ContentPresenter">
+                                                            <Setter Property="Background"
+                                                                    Value="{DynamicResource GhostHoverColor}" />
+                                                        </Style>
+                                                    </Button.Styles>
+
+                                                    <!-- Action Data -->
+                                                    <Grid ColumnDefinitions="Auto, Auto, *, Auto"
+                                                          VerticalAlignment="Center">
+                                                        <TextBlock Text="> " FontSize="20" VerticalAlignment="Center"
+                                                                   IsVisible="{Binding IsSelected}" />
+                                                        <PathIcon
+                                                            Grid.Column="1"
+                                                            Width="18"
+                                                            Height="18"
+                                                            Margin="0,0,12,0"
+                                                            Foreground="{x:Null}"
+                                                            Data="{Binding Action.Icon, Converter={StaticResource StringToIconConverter}}">
+                                                            <PathIcon.Styles>
+                                                                <Style Selector="Path">
+                                                                    <Setter Property="Stroke"
+                                                                            Value="{DynamicResource PrimaryColor}" />
+                                                                    <Setter Property="StrokeThickness" Value="1" />
+                                                                </Style>
+                                                            </PathIcon.Styles>
+                                                        </PathIcon>
+
+                                                        <TextBlock
+                                                            Grid.Column="2"
+                                                            VerticalAlignment="Center"
+                                                            Text="{Binding Action.Name}" />
+                                                    </Grid>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <!-- Custom Instruction Text Box -->
+                <StackPanel Margin="16" Spacing="8" IsVisible="{Binding IsCustomInstructionActive}">
+
+                    <TextBox VerticalAlignment="Stretch"
+                             Text="{Binding CustomInstruction, Mode=TwoWay}"
+                             Watermark="Enter your detailed custom instruction here. The AI will process this directly."
+                             shadui:ControlAssist.Height="250"
+                             shadui:ControlAssist.Label="Custom Instruction"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap" />
+
+                    <Button
+                        Classes="Primary"
+                        VerticalAlignment="Bottom"
+                        Content="Execute"
+                        ClickMode="Press"
+                        Click="CustomInstructionButton_OnPointerPressed" />
+                </StackPanel>
+            </Grid>
+        </DockPanel>
+    </shadui:Card>
+</shadui:Window>

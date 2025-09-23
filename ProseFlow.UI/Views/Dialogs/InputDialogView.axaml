@@ -1,0 +1,40 @@
+﻿<UserControl
+    x:Class="ProseFlow.UI.Views.Dialogs.InputDialogView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:shadui="clr-namespace:ShadUI;assembly=ShadUI"
+    xmlns:vm="using:ProseFlow.UI.ViewModels.Dialogs"
+    mc:Ignorable="d"
+    d:DesignHeight="300"
+    d:DesignWidth="400"
+    x:DataType="vm:InputDialogViewModel">
+
+    <Border Padding="16">
+        <StackPanel Width="400" Spacing="16">
+            <TextBlock Classes="h4" Text="{Binding Title}" Margin="16,0" />
+            <TextBlock Classes="p Muted" Text="{Binding Message}" TextWrapping="Wrap" Margin="16,0" />
+
+            <TextBox Margin="16"
+                shadui:ElementAssist.FocusOnLoad="True"
+                Text="{Binding InputText, Mode=TwoWay}"
+                KeyDown="InputTextBox_OnKeyDown" />
+
+            <StackPanel
+                Margin="16,0"
+                HorizontalAlignment="Right"
+                Orientation="Horizontal"
+                Spacing="8">
+                <Button
+                    Classes="Primary"
+                    Command="{Binding SubmitCommand}"
+                    Content="{Binding ConfirmButtonText}" />
+                <Button
+                    Classes="Outline"
+                    Command="{Binding CancelCommand}"
+                    Content="Cancel" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</UserControl>

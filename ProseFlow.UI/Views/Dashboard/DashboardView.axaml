@@ -1,0 +1,29 @@
+﻿<UserControl
+    x:Class="ProseFlow.UI.Views.Dashboard.DashboardView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:ProseFlow.UI.ViewModels.Dashboard"
+    mc:Ignorable="d"
+    x:DataType="vm:DashboardViewModel">
+
+    <DockPanel LastChildFill="True">
+        <!-- Page Header -->
+        <StackPanel Margin="48,24" DockPanel.Dock="Top" Spacing="4">
+            <TextBlock Classes="h2" Text="Dashboard" />
+            <TextBlock Classes="p" Text="Analyze usage, performance, and status for your AI providers."
+                       TextWrapping="Wrap" />
+        </StackPanel>
+
+        <ScrollViewer>
+            <TabControl Margin="48,0,48,24" SelectedIndex="{Binding SelectedTabIndex}" ItemsSource="{Binding Tabs}">
+                <TabControl.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Title}" Padding="16,8" FontWeight="Medium" />
+                    </DataTemplate>
+                </TabControl.ItemTemplate>
+            </TabControl>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

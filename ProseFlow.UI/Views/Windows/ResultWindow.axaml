@@ -1,0 +1,105 @@
+﻿<shadui:Window
+    x:Class="ProseFlow.UI.Views.Windows.ResultWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:md="https://github.com/whistyun/Markdown.Avalonia"
+    xmlns:shadui="clr-namespace:ShadUI;assembly=ShadUI"
+    xmlns:vm="using:ProseFlow.UI.ViewModels.Windows"
+    xmlns:icons="clr-namespace:ProseFlow.UI.Controls.Icons"
+    x:DataType="vm:ResultViewModel"
+
+    Title="{Binding ActionName}"
+    Icon="/Assets/logo.ico"
+    Width="800" Height="500" MinWidth="720" MinHeight="350"
+    WindowStartupLocation="CenterScreen"
+    SaveWindowState="True">
+    
+
+    <DockPanel LastChildFill="True">
+        <!-- Footer with action buttons -->
+        <Border
+            DockPanel.Dock="Bottom"
+            Padding="16"
+            BorderBrush="{DynamicResource BorderColor}"
+            BorderThickness="0,1,0,0">
+            <Grid ColumnDefinitions="Auto, *">
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" HorizontalAlignment="Left">
+                    <TextBox Name="RefineTextBox"
+                             Watermark="Refine the result... (e.g., 'Make it shorter')"
+                             Text="{Binding RefinementInstruction}"
+                             TextWrapping="Wrap"
+                             VerticalAlignment="Center"
+                             MinWidth="350"
+                             MaxWidth="600"
+                             KeyDown="RefineTextBox_OnKeyDown" />
+                    <Button Classes="Primary"
+                            Command="{Binding RefineCommand}"
+                            CommandParameter="{Binding $parent[Window]}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <icons:SymbolIcon Size="18" Symbol="Send" />
+                            <TextBlock Text="Refine" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <StackPanel
+                    Grid.Column="1" HorizontalAlignment="Right"
+                    Orientation="Horizontal"
+                    Spacing="8">
+                    <Button
+                        Classes="Outline"
+                        Command="{Binding CopyCommand}">
+                        <shadui:ButtonAssist.Icon>
+                            <icons:SymbolIcon Size="18" Symbol="Copy" />
+                        </shadui:ButtonAssist.Icon>
+                        Copy to Clipboard
+                    </Button>
+                    <Button
+                        Classes="Primary"
+                        Click="CloseWindow"
+                        IsDefault="True">
+                        <shadui:ButtonAssist.Icon>
+                            <icons:SymbolIcon Size="18" Symbol="X" />
+                        </shadui:ButtonAssist.Icon>
+                        Close
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Main Content -->
+        <ScrollViewer Padding="16">
+            <StackPanel Spacing="16" Margin="16">
+                <!-- Main Result Content -->
+                <StackPanel>
+                    <TextBlock Classes="h4" Text="Result" Margin="0,0,0,8" />
+                    <md:MarkdownScrollViewer
+                        SelectionEnabled="True"
+                        Markdown="{Binding MainContent}" />
+                </StackPanel>
+
+                <!-- Explanation Section -->
+                <shadui:Card
+                    Padding="0"
+                    IsVisible="{Binding IsExplanationVisible}">
+                    <Expander
+                        HorizontalAlignment="Stretch"
+                        Padding="16,8">
+                        <Expander.Header>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <icons:SymbolIcon Size="18" Symbol="Book" /> 
+                                <TextBlock Classes="Small Muted" FontWeight="Medium" VerticalAlignment="Center" Text="Show Explanation" />
+                            </StackPanel>
+                        </Expander.Header>
+                        <md:MarkdownScrollViewer
+                            SelectionEnabled="True"
+                            Margin="0,8,0,0"
+                            Markdown="{Binding ExplanationContent}"
+                            MaxHeight="200" />
+                    </Expander>
+                </shadui:Card>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</shadui:Window>

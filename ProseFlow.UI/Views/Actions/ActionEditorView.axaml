@@ -1,0 +1,154 @@
+﻿<shadui:Window
+    x:Class="ProseFlow.UI.Views.Actions.ActionEditorView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:shadui="clr-namespace:ShadUI;assembly=ShadUI"
+    xmlns:vm="using:ProseFlow.UI.ViewModels.Actions"
+    xmlns:icons="clr-namespace:ProseFlow.UI.Controls.Icons"
+    x:DataType="vm:ActionEditorViewModel"
+    DataContextChanged="Window_OnDataContextChanged"
+
+    Width="600" Height="700"
+    Margin="125"
+    WindowStartupLocation="CenterOwner"
+    CanResize="False"
+    ShowInTaskbar="False"
+    SaveWindowState="True"
+    IsTitleBarVisible="False"
+    Background="Transparent"
+    ShowBottomBorder="False"
+    BorderBrush="Transparent"
+    BorderThickness="0"
+    SystemDecorations="None">
+    <shadui:Card HasShadow="False">
+        <shadui:Card.Header>
+            <shadui:CardTitle>Action Details</shadui:CardTitle>
+        </shadui:Card.Header>
+
+        <ScrollViewer Margin="20">
+            <!-- Main Form Content -->
+            <StackPanel Spacing="16">
+                <TextBox
+                    shadui:ControlAssist.Label="Action Name"
+                    Text="{Binding Action.Name}"
+                    Watermark="e.g., Make More Formal" />
+
+                <ComboBox
+                    shadui:ControlAssist.Label="Group"
+                    DisplayMemberBinding="{Binding Name}"
+                    ItemsSource="{Binding AvailableGroups}"
+                    PlaceholderText="Select a group..."
+                    SelectedItem="{Binding SelectedActionGroup}" />
+
+                <TextBox
+                    shadui:ControlAssist.Label="Prefix (Optional)"
+                    Text="{Binding Action.Prefix}"
+                    Watermark="e.g., Proofread this text:" />
+
+                <TextBox
+                    shadui:ControlAssist.Label="Instruction (System Prompt)"
+                    shadui:ControlAssist.Height="150"
+                    AcceptsReturn="True"
+                    Text="{Binding Action.Instruction}"
+                    TextWrapping="Wrap"
+                    Watermark="You are a helpful assistant that..." />
+
+                <!-- Icon -->
+                <StackPanel>
+                    <TextBlock Classes="Label" Text="Icon" Margin="0,0,0,4" />
+                    <TabControl SelectedIndex="{Binding SelectedIconTab}">
+                        <TabItem Header="Built-in">
+                            <Grid ColumnDefinitions="*, Auto" ColumnSpacing="12" Margin="0,8">
+                                <ComboBox IsEnabled="{Binding SelectedIconTab, Converter={StaticResource ConditionCheckConverter}, ConverterParameter='0|True|False'}"
+                                    Grid.Column="0"
+                                    ItemsSource="{Binding LucideIcons}"
+                                    SelectedItem="{Binding SelectedLucideIcon}" />
+                                <Border Grid.Column="1" Width="36" Height="36"
+                                        BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"
+                                        CornerRadius="{DynamicResource MdCornerRadius}">
+                                    <PathIcon Width="20" Height="20" Foreground="{x:Null}"
+                                              Data="{Binding SelectedLucideIcon, Converter={StaticResource StringToIconConverter}}">
+                                        <PathIcon.Styles>
+                                            <Style Selector="Path">
+                                                <Setter Property="Stroke" Value="{DynamicResource PrimaryColor}" />
+                                                <Setter Property="StrokeThickness" Value="1" />
+                                            </Style>
+                                        </PathIcon.Styles>
+                                    </PathIcon>
+                                </Border>
+                            </Grid>
+                        </TabItem>
+                        <TabItem Header="Custom">
+                            <Grid ColumnDefinitions="*, Auto" ColumnSpacing="12" Margin="0,8">
+                                <TextBox
+                                    Grid.Column="0"
+                                    shadui:ControlAssist.Hint="Provide an icon path, raw SVG path data (e.g., `M12 2L...`), or the full XML content of an SVG file."
+                                    Text="{Binding SelectedIcon, Mode=TwoWay}"
+                                    Watermark="SVG path, avares:// URI, or full svg xml..." />
+                                <Border Grid.Column="1" Width="36" Height="36" Margin="0,0,0,24"
+                                        BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"
+                                        CornerRadius="{DynamicResource MdCornerRadius}">
+                                    <PathIcon Width="20" Height="20" Foreground="{x:Null}"
+                                              Data="{Binding SelectedIcon, Converter={StaticResource StringToIconConverter}}">
+                                        <PathIcon.Styles>
+                                            <Style Selector="Path">
+                                                <Setter Property="Stroke" Value="{DynamicResource PrimaryColor}" />
+                                                <Setter Property="StrokeThickness" Value="1" />
+                                            </Style>
+                                        </PathIcon.Styles>
+                                    </PathIcon>
+                                </Border>
+                            </Grid>
+                        </TabItem>
+                    </TabControl>
+                </StackPanel>
+
+                <TextBox
+                    shadui:ControlAssist.Label="Application Context (Optional)"
+                    shadui:ControlAssist.Hint="Comma-separated process names (e.g., Code.exe). Leave empty for global."
+                    Text="{Binding Action.ApplicationContext, Converter={StaticResource StringListConverter}}"
+                    Watermark="e.g., Code.exe, chrome.exe" />
+
+                <Separator />
+
+                <ToggleSwitch IsChecked="{Binding Action.OpenInWindow}" Margin="10,0,0,0">
+                    Show result in a new window by default
+                </ToggleSwitch>
+
+                <ToggleSwitch IsChecked="{Binding Action.ExplainChanges}" Margin="10,0,0,0">
+                    Ask AI to explain changes (may increase token usage)
+                </ToggleSwitch>
+            </StackPanel>
+
+
+        </ScrollViewer>
+        <!-- Action Buttons -->
+        <shadui:Card.Footer>
+            <StackPanel
+                HorizontalAlignment="Right"
+                Orientation="Horizontal"
+                Spacing="8">
+                <Button
+                    Classes="Outline"
+                    Command="{Binding CancelCommand}"
+                    CommandParameter="{Binding $parent[Window]}"
+                    IsCancel="True">
+                    <shadui:ButtonAssist.Icon>
+                        <icons:SymbolIcon Size="18" Symbol="X" />
+                    </shadui:ButtonAssist.Icon>
+                    Cancel
+                </Button>
+                <Button
+                    Classes="Primary"
+                    Command="{Binding SaveCommand}"
+                    CommandParameter="{Binding $parent[Window]}"
+                    IsDefault="True">
+                    <shadui:ButtonAssist.Icon>
+                        <icons:SymbolIcon Size="18" Symbol="Save" />
+                    </shadui:ButtonAssist.Icon>
+                    Save
+                </Button>
+            </StackPanel>
+        </shadui:Card.Footer>
+    </shadui:Card>
+</shadui:Window>

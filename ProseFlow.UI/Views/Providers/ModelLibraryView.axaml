@@ -1,0 +1,237 @@
+﻿<UserControl
+    x:Class="ProseFlow.UI.Views.Providers.ModelLibraryView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:shadui="clr-namespace:ShadUI;assembly=ShadUI"
+    xmlns:vm="using:ProseFlow.UI.ViewModels.Providers"
+    xmlns:downloads="using:ProseFlow.UI.ViewModels.Downloads"
+    xmlns:core="using:ProseFlow.Core.Models"
+    xmlns:icons="clr-namespace:ProseFlow.UI.Controls.Icons"
+    mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+    x:DataType="vm:ModelLibraryViewModel"
+    DataContextChanged="OnDataContextChanged">
+
+    <DockPanel>
+        <TabControl SelectedIndex="{Binding SelectedTabIndex}" HorizontalAlignment="Center" Margin="0,24">
+            <TabItem Header="Available for Download" HorizontalAlignment="Center">
+                <Grid>
+                    <TextBlock TextAlignment="Center" Margin="25" IsVisible="{Binding AvailableModels.Count, Converter={StaticResource ConditionCheckConverter}, ConverterParameter='0|True|False'}" Text="No models available for download yet." />
+                    <ScrollViewer MaxHeight="400">
+                        <ItemsControl ItemsSource="{Binding AvailableModels}" Padding="24">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel ItemSpacing="8" LineSpacing="8" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="downloads:AvailableModelViewModel">
+                                    <shadui:Card Width="400">
+                                        <shadui:Card.Header>
+                                            <DockPanel>
+                                                <TextBlock Classes="Muted" DockPanel.Dock="Right"
+                                                           Text="{Binding Model.Creator}" />
+                                                <shadui:CardTitle Content="{Binding Model.Name}" />
+                                            </DockPanel>
+                                        </shadui:Card.Header>
+                                        <shadui:Card.Content>
+                                            <StackPanel Spacing="12" VerticalAlignment="Stretch">
+                                                <TextBlock Text="{Binding Model.Description}" TextWrapping="Wrap" />
+                                                <ComboBox VerticalAlignment="Bottom"
+                                                    IsEnabled="{Binding CurrentState, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static downloads:DownloadCardState.NotDownloaded}}"
+                                                    shadui:ControlAssist.Label="Quantization"
+                                                    ItemsSource="{Binding Model.Quantizations}"
+                                                    SelectedItem="{Binding SelectedQuantization}">
+                                                    <ComboBox.ItemTemplate>
+                                                        <DataTemplate DataType="core:ModelQuantization">
+                                                            <TextBlock>
+                                                                <Run Text="{Binding Name}" />
+                                                                <Run
+                                                                    Text="{Binding FileSizeGb, StringFormat='- {0:F1} GB'}" />
+                                                            </TextBlock>
+                                                        </DataTemplate>
+                                                    </ComboBox.ItemTemplate>
+                                                </ComboBox>
+                                            </StackPanel>
+                                        </shadui:Card.Content>
+                                        <shadui:Card.Footer>
+                                            <Panel>
+                                                <!-- State 1: Default Download Button -->
+                                                <Button Classes="Primary" HorizontalAlignment="Right"
+                                                        Command="{Binding StartDownloadCommand}"
+                                                        IsVisible="{Binding CurrentState, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static downloads:DownloadCardState.NotDownloaded}}">
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <icons:SymbolIcon Size="18" Symbol="Download" />
+                                                        <TextBlock>
+                                                            <Run Text="Download" />
+                                                            <Run
+                                                                Text="{Binding SelectedQuantization.FileSizeGb, StringFormat='({0:F1} GB)'}" />
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </Button>
+
+                                                <!-- State 2: Queued -->
+                                                <DockPanel VerticalAlignment="Center"
+                                                           IsVisible="{Binding CurrentState, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static downloads:DownloadCardState.Queued}}">
+                                                    <Button Classes="Outline" DockPanel.Dock="Right"
+                                                            Command="{Binding CancelDownloadCommand}" Content="Cancel" />
+                                                    <StackPanel Orientation="Horizontal" Spacing="8"
+                                                                VerticalAlignment="Center">
+                                                        <icons:SymbolIcon Size="16" Symbol="Clock" />
+                                                        <TextBlock Text="Queued..." FontWeight="Medium" />
+                                                    </StackPanel>
+                                                </DockPanel>
+
+                                                <!-- State 3: Downloading -->
+                                                <DockPanel VerticalAlignment="Center" HorizontalSpacing="8"
+                                                           IsVisible="{Binding CurrentState, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static downloads:DownloadCardState.Downloading}}">
+                                                    <Button Classes="Outline" DockPanel.Dock="Right"
+                                                            Command="{Binding CancelDownloadCommand}" Content="Cancel" />
+                                                    <Border Padding="0,8,0,0">
+
+                                                        <StackPanel Spacing="4">
+                                                            <ProgressBar ShowProgressText="True" CornerRadius="16"
+                                                                         Value="{Binding ActiveDownloadTask.ProgressPercentage, StringFormat='{}{0}%', Mode=OneWay, FallbackValue='0'}" />
+                                                            <TextBlock Classes="Small Muted">
+                                                                <Run
+                                                                    Text="{Binding ActiveDownloadTask.BytesDownloaded, Converter={StaticResource FileSizeConverter}, Mode=OneWay, FallbackValue='0'}" />
+                                                                <Run Text=" / " />
+                                                                <Run
+                                                                    Text="{Binding ActiveDownloadTask.TotalBytes, Converter={StaticResource FileSizeConverter}, Mode=OneWay, FallbackValue='0'}" />
+                                                                <Run Text="  -  " />
+                                                                <Run
+                                                                    Text="{Binding ActiveDownloadTask.Speed, StringFormat='{}{0} MB/s', Mode=OneWay, FallbackValue='0'}" />
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </DockPanel>
+
+                                                <!-- State 4: Installed -->
+                                                <DockPanel VerticalAlignment="Center"
+                                                           IsVisible="{Binding CurrentState, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static downloads:DownloadCardState.Installed}}">
+                                                    <Button Classes="Outline" DockPanel.Dock="Right"
+                                                            Command="{Binding GoToMyModelsCommand}" Content="View" />
+                                                    <StackPanel Orientation="Horizontal" Spacing="8"
+                                                                VerticalAlignment="Center">
+                                                        <icons:SymbolIcon Size="16" Symbol="CircleCheck" Classes="Success" />
+                                                        <TextBlock Text="Installed" FontWeight="Medium" />
+                                                    </StackPanel>
+                                                </DockPanel>
+
+                                                <!-- State 5: Failed -->
+                                                <DockPanel VerticalAlignment="Center"
+                                                           IsVisible="{Binding CurrentState, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static downloads:DownloadCardState.Failed}}">
+                                                    <Button Classes="Outline" DockPanel.Dock="Right"
+                                                            Command="{Binding RetryDownloadCommand}" Content="Retry" />
+                                                    <StackPanel Orientation="Horizontal" Spacing="8"
+                                                                VerticalAlignment="Center">
+                                                        <icons:SymbolIcon Size="16" Symbol="TriangleAlert"
+                                                                    Classes="Destructive" />
+                                                        <TextBlock Text="Download Failed" Classes="Destructive"
+                                                                   TextWrapping="Wrap" FontWeight="Medium" />
+                                                    </StackPanel>
+                                                </DockPanel>
+                                            </Panel>
+                                        </shadui:Card.Footer>
+                                    </shadui:Card>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="My Models" HorizontalAlignment="Center">
+                <DockPanel>
+                    <shadui:SimpleDropdown DockPanel.Dock="Top" Margin="16,0,16,16" HorizontalAlignment="Right"
+                                           Classes="Outline" PopupWidth="200">
+                        <shadui:SimpleDropdown.TriggerContent>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <icons:SymbolIcon Symbol="Plus" Size="16" />
+                                <TextBlock Text="Add Local Model" />
+                            </StackPanel>
+                        </shadui:SimpleDropdown.TriggerContent>
+                        <Button Command="{Binding ImportToLibraryCommand}">
+                            <shadui:ButtonAssist.Icon>
+                                <icons:SymbolIcon Symbol="Import" Size="16" />
+                            </shadui:ButtonAssist.Icon>
+                            Import to Library...
+                        </Button>
+                        <Button Command="{Binding LinkExternalModelCommand}">
+                            <shadui:ButtonAssist.Icon>
+                                <icons:SymbolIcon Symbol="Link" Size="16" />
+                            </shadui:ButtonAssist.Icon>
+                            Link External File...
+                        </Button>
+                    </shadui:SimpleDropdown>
+                    <DataGrid ItemsSource="{Binding LocalModels}" AutoGenerateColumns="False"
+                              CanUserReorderColumns="False" IsReadOnly="True" GridLinesVisibility="None"
+                              Margin="16,0,16,16">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="Status" Width="60">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate DataType="downloads:LocalModelViewModel">
+                                        <icons:SymbolIcon Size="16" Symbol="TriangleAlert" Classes="Destructive"
+                                                          IsVisible="{Binding IsMissing}"
+                                                          ToolTip.Tip="{Binding Model.FilePath, StringFormat='File not found at:&#x0a;{0}'}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="Name" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate DataType="downloads:LocalModelViewModel">
+                                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                            <icons:SymbolIcon Size="16" Symbol="CircleCheck"
+                                                        IsVisible="{Binding IsSelected}" Foreground="LimeGreen" />
+                                            <TextBlock Text="{Binding Model.Name}" FontWeight="Medium" />
+                                            <icons:SymbolIcon Size="14" Symbol="Link"
+                                                        IsVisible="{Binding !Model.IsManaged}"
+                                                        ToolTip.Tip="{Binding Model.FilePath, StringFormat='This is an externally linked model. The original file will not be deleted.&#x0a;File Path: {0}'}"
+                                                        Classes="Muted" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn Header="Size" Width="100"
+                                                Binding="{Binding Model.FileSizeGb, StringFormat='{}{0:F1} GB'}" />
+                            <DataGridTextColumn Header="Added" Width="150"
+                                                Binding="{Binding Model.AddedAt, StringFormat='yyyy-MM-dd'}" />
+                            <DataGridTemplateColumn Header="Actions" Width="Auto">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate DataType="downloads:LocalModelViewModel">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <!-- Actions for existing models -->
+                                            <Button Classes="Primary" IsEnabled="{Binding !IsSelected}"
+                                                    IsVisible="{Binding !IsMissing}"
+                                                    Command="{Binding $parent[UserControl].((vm:ModelLibraryViewModel)DataContext).SelectLocalModelCommand, FallbackValue={x:Null}}"
+                                                    CommandParameter="{Binding .}">
+                                                Select
+                                            </Button>
+                                            <Button Classes="Destructive Outline" Command="{Binding DeleteCommand}"
+                                                    IsVisible="{Binding !IsMissing}">
+                                                Delete
+                                            </Button>
+
+                                            <!-- Actions for missing models -->
+                                            <Button Classes="Outline" IsVisible="{Binding IsMissing}"
+                                                    Command="{Binding RelocateCommand}">
+                                                Relocate...
+                                            </Button>
+                                            <Button Classes="Destructive" IsVisible="{Binding IsMissing}"
+                                                    Command="{Binding DeleteCommand}">
+                                                Remove
+                                            </Button>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</UserControl>

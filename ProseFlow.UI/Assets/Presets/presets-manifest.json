@@ -1,0 +1,38 @@
+﻿[
+  {
+    "Id": "general",
+    "Name": "General",
+    "Description": "Core text correction, proofreading and rewriting.",
+    "ResourcePath": "ProseFlow.UI.Assets.Presets.general.json"
+  },
+  {
+    "Id": "change-tone",
+    "Name": "Change Tone",
+    "Description": "Adjust the tone of your text to be formal, casual, or simpler.",
+    "ResourcePath": "ProseFlow.UI.Assets.Presets.change-tone.json"
+  },
+  {
+    "Id": "change-length",
+    "Name": "Change Length",
+    "Description": "Expand or condense your text to meet specific needs.",
+    "ResourcePath": "ProseFlow.UI.Assets.Presets.change-length.json"
+  },
+  {
+    "Id": "change-structure",
+    "Name": "Change Structure",
+    "Description": "Reformat your text into different structures like lists.",
+    "ResourcePath": "ProseFlow.UI.Assets.Presets.change-structure.json"
+  },
+  {
+    "Id": "generate",
+    "Name": "Generate",
+    "Description": "Generate new content, from continuing text to brainstorming ideas.",
+    "ResourcePath": "ProseFlow.UI.Assets.Presets.generate.json"
+  },
+  {
+    "Id": "coding",
+    "Name": "Coding",
+    "Description": "A suite of tools for explaining, debugging, and improving code.",
+    "ResourcePath": "ProseFlow.UI.Assets.Presets.coding.json"
+  }
+]

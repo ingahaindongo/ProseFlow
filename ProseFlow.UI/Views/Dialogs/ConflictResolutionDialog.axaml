@@ -1,0 +1,81 @@
+﻿<shadui:Window
+    x:Class="ProseFlow.UI.Views.Dialogs.ConflictResolutionDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:shadui="clr-namespace:ShadUI;assembly=ShadUI"
+    xmlns:vm="using:ProseFlow.UI.ViewModels.Dialogs"
+    xmlns:dto="using:ProseFlow.Application.DTOs"
+    mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="500"
+    x:DataType="vm:ConflictResolutionViewModel"
+    Title="Resolve Import Conflicts"
+    Width="650" SizeToContent="Height" MaxHeight="600"
+    WindowStartupLocation="CenterOwner" CanResize="True" ShowInTaskbar="False"
+    IsTitleBarVisible="False" SystemDecorations="None" Background="Transparent"
+    ShowBottomBorder="False" BorderBrush="Transparent" BorderThickness="0">
+
+    <shadui:Card HasShadow="False">
+        <shadui:Card.Header>
+            <StackPanel>
+                <shadui:CardTitle>Resolve Import Conflicts</shadui:CardTitle>
+                <shadui:CardDescription>An action with the same name already exists. Choose how to handle each conflict.</shadui:CardDescription>
+            </StackPanel>
+        </shadui:Card.Header>
+
+        <DockPanel>
+            <!-- Global Actions -->
+            <Border DockPanel.Dock="Top" Padding="16,0">
+                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                    <TextBlock Classes="Small" Text="Apply to all:" VerticalAlignment="Center" />
+                    <Button Classes="Outline" Command="{Binding ApplyToAllCommand}"
+                            CommandParameter="{x:Static dto:ConflictResolutionType.Skip}">
+                        Skip All
+                    </Button>
+                    <Button Classes="Outline" Command="{Binding ApplyToAllCommand}"
+                            CommandParameter="{x:Static dto:ConflictResolutionType.Overwrite}">
+                        Overwrite All
+                    </Button>
+                    <Button Classes="Outline" Command="{Binding ApplyToAllCommand}"
+                            CommandParameter="{x:Static dto:ConflictResolutionType.Rename}">
+                        Rename All
+                    </Button>
+                </StackPanel>
+            </Border>
+
+            <!-- Conflict List -->
+            <ScrollViewer Margin="16">
+                <ItemsControl ItemsSource="{Binding Conflicts}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="vm:ConflictItemViewModel">
+                            <Border BorderBrush="{DynamicResource BorderColor}" BorderThickness="0,0,0,1"
+                                    Padding="0,12">
+                                <Grid ColumnDefinitions="*, Auto" ColumnSpacing="16" VerticalAlignment="Center">
+                                    <TextBlock Grid.Column="0" Text="{Binding Conflict.ExistingAction.Name}"
+                                               FontWeight="Medium" VerticalAlignment="Center" />
+                                    <ComboBox Grid.Column="1"
+                                              ItemsSource="{Binding $parent[Window].((vm:ConflictResolutionViewModel)DataContext).ResolutionTypes, FallbackValue={x:Null}}"
+                                              SelectedItem="{Binding SelectedResolution, Mode=TwoWay}"
+                                              Width="150" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </DockPanel>
+
+        <shadui:Card.Footer>
+            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="8">
+                <Button Classes="Outline" IsCancel="True"
+                        Command="{Binding CancelCommand}" CommandParameter="{Binding $parent[Window]}">
+                    Cancel Import
+                </Button>
+                <Button Classes="Primary" IsDefault="True"
+                        Command="{Binding ConfirmCommand}" CommandParameter="{Binding $parent[Window]}">
+                    Confirm Resolutions
+                </Button>
+            </StackPanel>
+        </shadui:Card.Footer>
+    </shadui:Card>
+</shadui:Window>

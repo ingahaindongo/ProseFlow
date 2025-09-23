@@ -1,0 +1,126 @@
+[
+  {
+    "Id": "LSXPrime/ProseFlow-v1-1.5B-Instruct-GGUF",
+    "Name": "ProseFlow v1 1.5B Instruct",
+    "Creator": "LSXPrime",
+    "Description": "ProseFlow-v1-1.5B-Instruct is a 1.5B parameter model designed as the local, offline AI engine for the ProseFlow desktop app. Fine-tuned from Qwen2.5-Coder, it inherits strong coding and reasoning skills, excelling at a wide range of text-processing and code-related tasks. It's optimized for high performance as a private, integrated AI assistant.",
+    "Tag": "Recommended",
+    "Quantizations": [
+      {
+        "Id": "Q4_K_M",
+        "Name": "Q4_K_M",
+        "RamRequiredGb": 1.75,
+        "FileSizeGb": 1.26,
+        "Url": "https://huggingface.co/LSXPrime/ProseFlow-v1-1.5B-Instruct-GGUF/resolve/main/ProseFlow-v1-1.5B-Instruct-Q4_K_M.gguf",
+        "FileName": "ProseFlow-v1-1.5B-Instruct-Q4_K_M.gguf"
+      },
+      {
+        "Id": "Q6_K",
+        "Name": "Q6_K",
+        "RamRequiredGb": 1.9,
+        "FileSizeGb": 1.55,
+        "Url": "https://huggingface.co/LSXPrime/ProseFlow-v1-1.5B-Instruct-GGUF/resolve/main/ProseFlow-v1-1.5B-Instruct-Q6_K.gguf",
+        "FileName": "ProseFlow-v1-1.5B-Instruct-Q6_K.gguf"
+      },
+      {
+        "Id": "Q8_0",
+        "Name": "Q8_0",
+        "RamRequiredGb": 2.5,
+        "FileSizeGb": 2.87,
+        "Url": "https://huggingface.co/LSXPrime/ProseFlow-v1-1.5B-Instruct-GGUF/resolve/main/ProseFlow-v1-1.5B-Instruct-Q8_0.gguf",
+        "FileName": "ProseFlow-v1-1.5B-Instruct-Q8_0.gguf"
+      }
+    ]
+  },
+  {
+    "Id": "LSXPrime/ProseFlow-v1-360M-Instruct-GGUF",
+    "Name": "ProseFlow v1 360M Instruct (Experimental)",
+    "Creator": "LSXPrime",
+    "Description": "An experimental 360M parameter model for the ProseFlow app, designed for research and extremely low-resource devices. It's very fast and lightweight but has significant limitations in reasoning and creative tasks. Suitable for simple text-formatting but the larger 1.5B model is recommended for general use.",
+    "Tag": "Experimental",
+    "Quantizations": [
+      {
+        "Id": "Q4_K_M",
+        "Name": "Q4_K_M",
+        "RamRequiredGb": 0.9,
+        "FileSizeGb": 0.32,
+        "Url": "https://huggingface.co/LSXPrime/ProseFlow-v1-360M-Instruct-GGUF/resolve/main/ProseFlow-v1-360M-Instruct-Q4_K_M.gguf",
+        "FileName": "ProseFlow-v1-360M-Instruct-Q4_K_M.gguf"
+      },
+      {
+        "Id": "Q8_0",
+        "Name": "Q8_0",
+        "RamRequiredGb": 1.0,
+        "FileSizeGb": 0.43,
+        "Url": "https://huggingface.co/LSXPrime/ProseFlow-v1-360M-Instruct-GGUF/resolve/main/ProseFlow-v1-360M-Instruct-Q8_0.gguf",
+        "FileName": "ProseFlow-v1-360M-Instruct-Q8_0.gguf"
+      }
+    ]
+  },
+  {
+    "Id": "unsloth/Qwen3-4B-Instruct-2507-GGUF",
+    "Name": "Qwen3 4B Instruct (2507)",
+    "Creator": "Qwen",
+    "Description": "Qwen3-4B is a 4 billion parameter, instruction-tuned model by Qwen, excelling in reasoning, math, and coding. It features a massive 256K context window for superior long-context understanding and is designed as a 'non-thinking' model for direct, helpful responses. It's well-aligned for subjective tasks and has broad multilingual knowledge.",
+    "Tag": "Recommended",
+    "Quantizations": [
+      {
+        "Id": "IQ2_XXS",
+        "Name": "IQ2_XXS",
+        "RamRequiredGb": 1.26,
+        "FileSizeGb": 1.26,
+        "Url": "https://huggingface.co/unsloth/Qwen3-4B-Instruct-2507-GGUF/resolve/main/Qwen3-4B-Instruct-2507-IQ2_XXS.gguf",
+        "FileName": "Qwen3-4B-Instruct-2507-IQ2_XXS.gguf"
+      },
+      {
+        "Id": "Q4_K_M",
+        "Name": "Q4_K_M",
+        "RamRequiredGb": 2.5,
+        "FileSizeGb": 2.5,
+        "Url": "https://huggingface.co/unsloth/Qwen3-4B-Instruct-2507-GGUF/resolve/main/Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+        "FileName": "Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
+      },
+      {
+        "Id": "Q6_K",
+        "Name": "Q6_K",
+        "RamRequiredGb": 3.31,
+        "FileSizeGb": 3.31,
+        "Url": "https://huggingface.co/unsloth/Qwen3-4B-Instruct-2507-GGUF/resolve/main/Qwen3-4B-Instruct-2507-Q6_K.gguf",
+        "FileName": "Qwen3-4B-Instruct-2507-Q6_K.gguf"
+      }
+    ]
+  },
+  {
+    "Id": "unsloth/GLM-4-9B-0414-GGUF",
+    "Name": "GLM-4 9B (0414)",
+    "Creator": "Zhipu",
+    "Description": "GLM-4-9B is a 9 billion parameter model from Zhipu AI, offering top-tier performance in a lightweight package. It excels in mathematical reasoning and general instruction-following, inheriting the strong function calling and code generation abilities of its larger counterparts. This model strikes an excellent balance between efficiency and effectiveness, making it ideal for resource-constrained deployment.",
+    "Tag": "Recommended",
+    "Quantizations": [
+      {
+        "Id": "IQ2_XXS",
+        "Name": "IQ2_XXS",
+        "RamRequiredGb": 3.51,
+        "FileSizeGb": 3.51,
+        "Url": "https://huggingface.co/unsloth/GLM-4-9B-0414-GGUF/resolve/main/GLM-4-9B-0414-UD-IQ2_XXS.gguf",
+        "FileName": "GLM-4-9B-0414-UD-IQ2_XXS.gguf"
+      },
+      {
+        "Id": "Q4_K_XL",
+        "Name": "Q4_K_XL",
+        "RamRequiredGb": 6.21,
+        "FileSizeGb": 6.21,
+        "Url": "https://huggingface.co/unsloth/GLM-4-9B-0414-GGUF/resolve/main/GLM-4-9B-0414-UD-Q4_K_XL.gguf",
+        "FileName": "GLM-4-9B-0414-UD-Q4_K_XL.gguf"
+      },
+      {
+        "Id": "Q6_K",
+        "Name": "Q6_K",
+        "RamRequiredGb": 8.27,
+        "FileSizeGb": 8.27,
+        "Url": "https://huggingface.co/unsloth/GLM-4-9B-0414-GGUF/resolve/main/GLM-4-9B-0414-Q6_K.gguf",
+        "FileName": "GLM-4-9B-0414-Q6_K.gguf"
+      }
+    ]
+  }
+]

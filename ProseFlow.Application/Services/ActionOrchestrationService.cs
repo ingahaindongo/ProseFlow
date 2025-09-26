@@ -6,6 +6,7 @@ using ProseFlow.Application.Events;
 using ProseFlow.Application.Interfaces;
 using ProseFlow.Core.Enums;
 using ProseFlow.Core.Interfaces;
+using ProseFlow.Core.Interfaces.Os;
 using ProseFlow.Core.Models;
 using Action = ProseFlow.Core.Models.Action;
 
@@ -14,16 +15,22 @@ namespace ProseFlow.Application.Services;
 public class ActionOrchestrationService : IDisposable
 {
     private readonly IServiceScopeFactory _scopeFactory;
-    private readonly IOsService _osService;
     private readonly IReadOnlyDictionary<string, IAiProvider> _providers;
     private readonly ILocalSessionService _localSessionService;
     private readonly ILogger<ActionOrchestrationService> _logger;
+    
+    private readonly IHotkeyService _hotkeyService;
+    private readonly IActiveWindowService _activeWindowService;
+    private readonly IClipboardService _clipboardService;
 
-    public ActionOrchestrationService(IServiceScopeFactory scopeFactory, IOsService osService,
+    public ActionOrchestrationService(IServiceScopeFactory scopeFactory, IHotkeyService hotkeyService, IActiveWindowService activeWindowService,
+        IClipboardService clipboardService,
         IEnumerable<IAiProvider> providers, ILocalSessionService localSessionService, ILogger<ActionOrchestrationService> logger)
     {
         _scopeFactory = scopeFactory;
-        _osService = osService;
+        _hotkeyService = hotkeyService;
+        _activeWindowService = activeWindowService;
+        _clipboardService = clipboardService;
         _localSessionService = localSessionService;
         _providers = providers.ToDictionary(p => p.Name, p => p, StringComparer.OrdinalIgnoreCase);
         _logger = logger;
@@ -31,13 +38,13 @@ public class ActionOrchestrationService : IDisposable
 
     public void Initialize()
     {
-        _osService.ActionMenuHotkeyPressed += async () => await HandleActionMenuHotkeyAsync();
-        _osService.SmartPasteHotkeyPressed += async () => await HandleSmartPasteHotkeyAsync();
+        _hotkeyService.ActionMenuHotkeyPressed += async () => await HandleActionMenuHotkeyAsync();
+        _hotkeyService.SmartPasteHotkeyPressed += async () => await HandleSmartPasteHotkeyAsync();
     }
 
     private async Task HandleActionMenuHotkeyAsync()
     {
-        var activeAppContext = await _osService.GetActiveWindowProcessNameAsync();
+        var activeAppContext = await _activeWindowService.GetActiveWindowProcessNameAsync();
         var allActions = await ExecuteQueryAsync(unitOfWork => unitOfWork.Actions.GetAllOrderedAsync());
 
         // Filter actions based on context
@@ -98,7 +105,7 @@ public class ActionOrchestrationService : IDisposable
         
         try
         {
-            var userInput = await _osService.GetSelectedTextAsync();
+            var userInput = await _clipboardService.GetSelectedTextAsync();
             if (string.IsNullOrWhiteSpace(userInput))
             {
                 AppEvents.RequestNotification("No text selected or clipboard is empty.", NotificationType.Warning);
@@ -192,7 +199,7 @@ public class ActionOrchestrationService : IDisposable
                     latencyMs,
                     aiResponse.TokensPerSecond);
                 
-                await _osService.PasteTextAsync(aiResponse.Content);
+                await _clipboardService.PasteTextAsync(aiResponse.Content);
             }
 
             overallStopwatch.Stop();
@@ -305,7 +312,7 @@ public class ActionOrchestrationService : IDisposable
 
     public void Dispose()
     {
-        _osService.Dispose();
+        _hotkeyService.Dispose();
         foreach (var provider in _providers.Values)
         {
             provider.Dispose();

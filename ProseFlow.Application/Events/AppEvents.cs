@@ -16,6 +16,26 @@ public enum NotificationType { Info, Success, Warning, Error }
 public static class AppEvents
 {
     /// <summary>
+    /// Configuration flag to enable or disable the floating menu feature globally.
+    /// </summary>
+    public static bool IsShowFloatingMenuEnabled = true;
+
+    /// <summary>
+    /// Configuration flag to enable or disable the result window display feature globally.
+    /// </summary>
+    public static bool IsShowResultWindowEnabled = true;
+
+    /// <summary>
+    /// Configuration flag to enable or disable system notifications (toasts) globally.
+    /// </summary>
+    public static bool IsShowNotificationEnabled = true;
+    
+    /// <summary>
+    /// Configuration flag to enable or disable the conflict resolution UI globally.
+    /// </summary>
+    public static bool IsResolveConflictsEnabled = true;
+
+    /// <summary>
     /// Raised when the Action Orchestration Service needs the UI to display the Floating Action Menu.
     /// The UI layer subscribes to this, shows the menu, and returns the user's selection.
     /// The Func returns a task that resolves to the user's choice, or null if cancelled.
@@ -27,11 +47,12 @@ public static class AppEvents
     /// </summary>
     public static async Task<ActionExecutionRequest?> RequestFloatingMenuAsync(IEnumerable<Action> availableActions, string activeAppContext)
     {
+        if (!IsShowFloatingMenuEnabled) return null;
+
         return ShowFloatingMenuRequested is not null
             ? await ShowFloatingMenuRequested.Invoke(availableActions, activeAppContext)
             : await Task.FromResult<ActionExecutionRequest?>(null);
     }
-
 
     /// <summary>
     /// Raised when a result needs to be displayed in a window.
@@ -46,12 +67,13 @@ public static class AppEvents
     /// <returns>A RefinementRequest if the user wants to refine, otherwise null.</returns>
     public static async Task<RefinementRequest?> RequestResultWindowAsync(ResultWindowData data)
     {
+        if (!IsShowResultWindowEnabled) return null;
+
         return ShowResultWindowAndAwaitRefinement is not null
             ? await ShowResultWindowAndAwaitRefinement.Invoke(data)
             : await Task.FromResult<RefinementRequest?>(null);
         // Graceful failure
     }
-
 
     /// <summary>
     /// Raised to show a system notification (toast).
@@ -64,9 +86,11 @@ public static class AppEvents
     /// </summary>
     public static void RequestNotification(string message, NotificationType type)
     {
+        if (!IsShowNotificationEnabled) return;
+
         ShowNotificationRequested?.Invoke(message, type);
     }
-    
+
     /// <summary>
     /// Raised when the Action Management Service detects conflicts during an import.
     /// The UI layer subscribes to this, shows a resolution dialog, and returns the user's choices.
@@ -79,6 +103,8 @@ public static class AppEvents
     /// <returns>A list of resolved conflicts, or null if the user cancelled the operation.</returns>
     public static async Task<List<ActionConflict>?> RequestConflictResolutionAsync(List<ActionConflict> conflicts)
     {
+        if (!IsResolveConflictsEnabled) return null;
+
         return ResolveConflictsRequested is not null
             ? await ResolveConflictsRequested.Invoke(conflicts)
             : await Task.FromResult<List<ActionConflict>?>(null);

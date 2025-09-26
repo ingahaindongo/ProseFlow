@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -15,18 +16,16 @@ public partial class OnboardingWindow : Window
     public OnboardingWindow()
     {
         InitializeComponent();
-        DataContextChanged += async (_, _) =>
-        {
-            if (DataContext is OnboardingViewModel vm)
-            {
-                await vm.InitializeAsync();
-            }
-        };
+        DataContextChanged += OnDataContextChanged;
     }
-
-    private void Button_SkipOnboard(object? sender, RoutedEventArgs e)
+    
+    private async void OnDataContextChanged(object? sender, EventArgs e)
     {
-        Close(true);
+        if (DataContext is OnboardingViewModel vm)
+        {
+            vm.RequestClose += Close;
+            await vm.InitializeAsync();
+        }
     }
     
     private void OnboardingWindow_OnClosing(object? sender, WindowClosingEventArgs e)

@@ -42,7 +42,7 @@
                         IsVisible="{Binding IsBackButtonVisible}" />
 
                 <Button DockPanel.Dock="Right" Classes="Primary" Content="{Binding NextButtonText}" Margin="8,0"
-                        Command="{Binding NextStepCommand}" CommandParameter="{Binding $parent[Window]}"
+                        Command="{Binding NextStepCommand}"
                         IsEnabled="{Binding IsNextButtonEnabled}"
                         IsVisible="{Binding CurrentStep, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter={x:Static vm:OnboardingStep.ProviderChoice}}" />
             </DockPanel>
@@ -74,7 +74,7 @@
                            Text="Your personal AI text processor, available everywhere with a keystroke." />
 
                 <Button Classes="Outline" VerticalAlignment="Bottom" HorizontalAlignment="Center"
-                        Content="Experienced? Skip" Click="Button_SkipOnboard" />
+                        Content="Experienced? Skip" Command="{Binding SkipOnboardingCommand}" />
             </StackPanel>
 
             <!-- Provider Choice Step -->

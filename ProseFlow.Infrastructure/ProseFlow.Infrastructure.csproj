@@ -18,17 +18,27 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <!-- Normalize to lowercase for easier comparison -->
         <DetectedArch Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)' == 'X64'">x64</DetectedArch>
         <DetectedArch Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)' == 'Arm64'">arm64</DetectedArch>
     </PropertyGroup>
-
-    <PropertyGroup>
-        <RuntimeIdentifier Condition="$([MSBuild]::IsOSPlatform('Windows'))">win-x64</RuntimeIdentifier>
-        <RuntimeIdentifier Condition="$([MSBuild]::IsOSPlatform('Linux'))">linux-x64</RuntimeIdentifier>
-        <RuntimeIdentifier Condition="$([MSBuild]::IsOSPlatform('OSX')) AND '$(DetectedArch)' == 'arm64'">osx-arm64</RuntimeIdentifier>
-        <RuntimeIdentifier Condition="$([MSBuild]::IsOSPlatform('OSX')) AND '$(DetectedArch)' == 'x64'">osx-x64</RuntimeIdentifier>
-    </PropertyGroup>
+    
+    <Choose>
+        <When Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+            <PropertyGroup>
+                <RuntimeIdentifier>win-$(DetectedArch)</RuntimeIdentifier>
+            </PropertyGroup>
+        </When>
+        <When Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+            <PropertyGroup>
+                <RuntimeIdentifier>linux-$(DetectedArch)</RuntimeIdentifier>
+            </PropertyGroup>
+        </When>
+        <When Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+            <PropertyGroup>
+                <RuntimeIdentifier>osx-$(DetectedArch)</RuntimeIdentifier>
+            </PropertyGroup>
+        </When>
+    </Choose>
 
     <Target Name="DisplayBuildEnvironment" BeforeTargets="Build">
         <PropertyGroup>
@@ -48,10 +58,10 @@
         <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.5-pre441" />
         <PackageReference Include="LLamaSharp.Backend.Cpu" Version="0.25.1" />
         <PackageReference Include="LLamaSharp.Backend.Vulkan" Version="0.25.1" />
-        <PackageReference Include="LlmTornado" Version="3.7.29" />
+        <PackageReference Include="LlmTornado" Version="3.7.42" />
         <PackageReference Include="Microsoft.AspNetCore.DataProtection" Version="9.0.7"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.7"/>
-        <PackageReference Include="SharpHook" Version="7.0.1" />
+        <PackageReference Include="SharpHook" Version="7.0.2" />
         <PackageReference Include="TextCopy" Version="6.2.1"/>
 
         <PackageReference Include="LLamaSharp" Version="0.25.0" />

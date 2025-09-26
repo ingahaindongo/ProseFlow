@@ -1,9 +1,9 @@
 ﻿using System.Threading.Tasks;
-using ProseFlow.Core.Interfaces;
+using ProseFlow.Core.Interfaces.Os;
 
 namespace ProseFlow.UI.Services.ActiveWindow;
 
-public class DefaultActiveWindowTracker : IActiveWindowTracker
+public class DefaultActiveWindowTracker : IActiveWindowService
 {
     public Task<string> GetActiveWindowProcessNameAsync()
     {

@@ -162,7 +162,7 @@
                                             Header="Default Output" />
 
                         <!-- Actions Column (with Dropdown) -->
-                        <DataGridTemplateColumn Width="Auto" Header="Actions">
+                        <DataGridTemplateColumn Width="Auto" Header="Options">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <shadui:SimpleDropdown HorizontalAlignment="Center" VerticalAlignment="Center"

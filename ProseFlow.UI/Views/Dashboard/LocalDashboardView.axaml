@@ -24,7 +24,7 @@
     </UserControl.Styles>
 
     <!-- Main two-column layout -->
-    <Grid ColumnDefinitions="*, 320">
+    <Grid ColumnDefinitions="*, Auto">
 
         <!-- Column 0: Main Scrollable Content Area -->
         <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Visible" VerticalContentAlignment="Stretch"
@@ -37,11 +37,15 @@
                 </DockPanel>
 
                 <!-- KPI Cards -->
-                <UniformGrid Columns="2" ColumnSpacing="16">
+                <UniformGrid Columns="{Binding IsHardwareMonitoringAvailable, Converter={StaticResource ConditionCheckConverter}, ConverterParameter='true|2|3'}" ColumnSpacing="16">
                     <controls:OverviewCard Title="Total Local Tokens" Icon="HardDrive"
                                            Value="{Binding TotalLocalTokens, StringFormat='N0'}" />
                     <controls:OverviewCard Title="Total Local Actions" Icon="Activity"
                                            Value="{Binding TotalLocalActions, StringFormat='N0'}" />
+                    <!-- This card is only visible when the hardware monitor sidebar is hidden -->
+                    <controls:OverviewCard Title="Avg. Inference Speed" Icon="Gauge"
+                                           Value="{Binding InferenceSpeed}"
+                                           IsVisible="{Binding !IsHardwareMonitoringAvailable}" />
                 </UniformGrid>
 
                 <!-- Analysis Section -->
@@ -111,8 +115,10 @@
             </StackPanel>
         </ScrollViewer>
 
-        <!-- Column 1: Hardware Monitor Sidebar -->
+        <!-- Column 1: Hardware Monitor Sidebar. This whole section is hidden if monitoring is unavailable. -->
         <Border Grid.Column="1"
+                Width="320"
+                IsVisible="{Binding IsHardwareMonitoringAvailable}"
                 BorderThickness="1,0,0,0"
                 BorderBrush="{DynamicResource BorderColor}">
             <ScrollViewer>

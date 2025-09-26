@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -12,10 +11,10 @@ using ProseFlow.Application.DTOs;
 using ProseFlow.Application.Events;
 using ProseFlow.Application.Interfaces;
 using ProseFlow.Application.Services;
-using ProseFlow.Core.Interfaces;
+using ProseFlow.Core.Interfaces.Os;
 using ProseFlow.Core.Models;
 using ProseFlow.UI.ViewModels.Providers;
-using ShadUI;
+using Action = System.Action;
 
 namespace ProseFlow.UI.ViewModels.Onboarding;
 
@@ -43,8 +42,12 @@ public partial class OnboardingViewModel(
     SettingsService settingsService,
     CloudProviderManagementService cloudProviderService,
     IPresetService presetService,
-    IOsService osService) : ViewModelBase
+    IHotkeyService hotkeyService,
+    ISystemService systemService) : ViewModelBase
 {
+    public event Action? RequestClose;
+    public bool IsCompletedSuccessfully { get; private set; }
+
     [ObservableProperty]
     private OnboardingStep _currentStep = OnboardingStep.Welcome;
 
@@ -75,7 +78,8 @@ public partial class OnboardingViewModel(
         Ioc.Default.GetRequiredService<SettingsService>(), 
         Ioc.Default.GetRequiredService<CloudProviderManagementService>(),
         Ioc.Default.GetRequiredService<IPresetService>(),
-        Ioc.Default.GetRequiredService<IOsService>()) {}
+        Ioc.Default.GetRequiredService<IHotkeyService>(),
+        Ioc.Default.GetRequiredService<ISystemService>()) {}
 
     public async Task InitializeAsync()
     {
@@ -104,7 +108,7 @@ public partial class OnboardingViewModel(
         if (CurrentContentViewModel is HotkeyTutorialViewModel oldTutorialVm)
         {
             oldTutorialVm.PropertyChanged -= OnContentViewModelPropertyChanged;
-            osService.ActionMenuHotkeyPressed -= OnTutorialHotkeyPressed; // Unsubscribe
+            hotkeyService.ActionMenuHotkeyPressed -= OnTutorialHotkeyPressed; // Unsubscribe
         }
 
         // Set the new content view model and enable/disable next button
@@ -130,7 +134,7 @@ public partial class OnboardingViewModel(
                 tutorialVm.ConfiguredHotkey = ActionMenuHotkey; // Pass the configured hotkey
                 CurrentContentViewModel = tutorialVm;
                 IsNextButtonEnabled = tutorialVm.IsCompleted;
-                osService.ActionMenuHotkeyPressed += OnTutorialHotkeyPressed; // Subscribe
+                hotkeyService.ActionMenuHotkeyPressed += OnTutorialHotkeyPressed; // Subscribe
                 break;
             default:
                 CurrentContentViewModel = null; // For simple steps handled by DataTemplates
@@ -161,13 +165,14 @@ public partial class OnboardingViewModel(
     }
 
     [RelayCommand]
-    private void NextStep(Window window)
+    private void NextStep()
     {
         switch (CurrentStep)
         {
             // Final step, close the dialog with a success result
             case OnboardingStep.Graduation:
-                window.Close(true);
+                IsCompletedSuccessfully = true;
+                RequestClose?.Invoke();
                 return;
             // Handle branching from provider choice
             case OnboardingStep.ProviderChoice:
@@ -181,7 +186,7 @@ public partial class OnboardingViewModel(
                 LocalModelPath = localVm.SelectedModel?.Model.FilePath;
                 break;
             case OnboardingStep.HotkeySetup:
-                osService.UpdateHotkeys(ActionMenuHotkey, "Ctrl+Shift+V");
+                hotkeyService.UpdateHotkeys(ActionMenuHotkey, "Ctrl+Shift+V");
                 break;
         }
 
@@ -195,6 +200,13 @@ public partial class OnboardingViewModel(
         };
 
         UpdateStep(nextStep);
+    }
+    
+    [RelayCommand]
+    private void SkipOnboarding()
+    {
+        IsCompletedSuccessfully = true;
+        RequestClose?.Invoke();
     }
 
     [RelayCommand]
@@ -228,7 +240,7 @@ public partial class OnboardingViewModel(
 
         generalSettings.LaunchAtLogin = LaunchAtLogin;
         generalSettings.ActionMenuHotkey = ActionMenuHotkey;
-        osService.SetLaunchAtLogin(LaunchAtLogin);
+        systemService.SetLaunchAtLogin(LaunchAtLogin);
 
         if (CloudProviderConfig is not null)
         {
@@ -258,6 +270,6 @@ public partial class OnboardingViewModel(
     
     public void OnClosing()
     {
-        osService.ActionMenuHotkeyPressed -= OnTutorialHotkeyPressed;
+        hotkeyService.ActionMenuHotkeyPressed -= OnTutorialHotkeyPressed;
     }
 }

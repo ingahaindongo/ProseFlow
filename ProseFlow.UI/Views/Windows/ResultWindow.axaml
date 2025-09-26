@@ -11,6 +11,7 @@
     Title="{Binding ActionName}"
     Icon="/Assets/logo.ico"
     Width="800" Height="500" MinWidth="720" MinHeight="350"
+    WindowState="Normal"
     WindowStartupLocation="CenterScreen"
     SaveWindowState="True">
     

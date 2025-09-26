@@ -19,6 +19,7 @@ using ProseFlow.Application.Events;
 using ProseFlow.Application.Interfaces;
 using ProseFlow.Application.Services;
 using ProseFlow.Core.Interfaces;
+using ProseFlow.Core.Interfaces.Os;
 using ProseFlow.Infrastructure.Data;
 using ProseFlow.Infrastructure.Security;
 using ProseFlow.Infrastructure.Services.AiProviders;
@@ -72,7 +73,7 @@ public class App : Avalonia.Application
             return;
         }
 
-        // Create main window but without initializing it. It acts as an owner for startup error dialogs.
+        // Create main window, It acts as an owner for startup dialogs.
         desktop.MainWindow = new MainWindow();
         desktop.MainWindow.Show();
 
@@ -207,12 +208,13 @@ public class App : Avalonia.Application
         var orchestrationService = Services.GetRequiredService<ActionOrchestrationService>();
         orchestrationService.Initialize();
 
-        // Subscribe UI handlers to application-layer events
-        var osService = Services.GetRequiredService<IOsService>();
+        // Hook up hotkeys
+        var hotkeyService = Services.GetRequiredService<IHotkeyService>();
         var generalSettings = await settingsService.GetGeneralSettingsAsync();
-        _ = osService.StartHookAsync();
-        osService.UpdateHotkeys(generalSettings.ActionMenuHotkey, generalSettings.SmartPasteHotkey);
+        _ = hotkeyService.StartHookAsync();
+        hotkeyService.UpdateHotkeys(generalSettings.ActionMenuHotkey, generalSettings.SmartPasteHotkey);
 
+        // Subscribe UI handlers to application-layer events
         SubscribeToAppEvents();
 
         // Setup Dialogs
@@ -232,32 +234,7 @@ public class App : Avalonia.Application
             _ => ThemeVariant.Default
         };
         
-        // Onboarding process for new users
-        if (!generalSettings.IsOnboardingCompleted)
-        {
-            var onboardingVm = Services.GetRequiredService<OnboardingViewModel>();
-            var onboardingWindow = new OnboardingWindow { DataContext = onboardingVm };
-
-            var completedSuccessfully = await onboardingWindow.ShowDialog<bool>(desktop.MainWindow);
-            if (completedSuccessfully)
-            {
-                // Save all settings gathered during onboarding
-                await onboardingVm.SaveSettingsAsync();
-
-                // Mark onboarding as complete and save
-                generalSettings = await settingsService.GetGeneralSettingsAsync();
-                generalSettings.IsOnboardingCompleted = true;
-                await settingsService.SaveGeneralSettingsAsync(generalSettings);
-            }
-            else
-            {
-                // If the user closes the onboarding window, quit the application.
-                desktop.Shutdown();
-                return;
-            }
-        }
-
-        // If onboarding completed, assign the view model
+        // Assign the main view model now, so the window is ready.
         desktop.MainWindow.DataContext = Services.GetRequiredService<MainViewModel>();
         
         // Handle the closing event to hide the window instead of closing
@@ -270,6 +247,46 @@ public class App : Avalonia.Application
         // Create and set up the system tray icon
         _trayIcon = CreateTrayIcon();
         if (_trayIcon is not null) TrayIcon.SetIcons(this, [_trayIcon]);
+
+        // Onboarding is the last step. It runs on top of the fully initialized but hidden application.
+        if (!generalSettings.IsOnboardingCompleted)
+        {
+            // Disable the floating menu while onboarding is active.
+            AppEvents.IsShowFloatingMenuEnabled = false;
+
+            var onboardingVm = Services.GetRequiredService<OnboardingViewModel>();
+            var onboardingWindow = new OnboardingWindow { DataContext = onboardingVm };
+
+            // Handle the closing of the non-modal onboarding window to determine the next step.
+            onboardingWindow.Closing += async (_, _) =>
+            {
+                // Re-enable the floating menu regardless of outcome.
+                AppEvents.IsShowFloatingMenuEnabled = true;
+
+                if (onboardingVm.IsCompletedSuccessfully)
+                {
+                    await onboardingVm.SaveSettingsAsync();
+                    
+                    var freshSettings = await settingsService.GetGeneralSettingsAsync();
+                    freshSettings.IsOnboardingCompleted = true;
+                    await settingsService.SaveGeneralSettingsAsync(freshSettings);
+                    
+                    desktop.MainWindow.Show();
+                    desktop.MainWindow.Activate();
+                }
+                else
+                {
+                    desktop.Shutdown();
+                }
+            };
+            
+            onboardingWindow.Show(desktop.MainWindow);
+        }
+        else
+        {
+            // For returning users, just show the main window.
+            desktop.MainWindow.Show();
+        }
 
         base.OnFrameworkInitializationCompleted();
     }
@@ -433,7 +450,13 @@ public class App : Avalonia.Application
             return Dispatcher.UIThread.InvokeAsync(async () =>
             {
                 var viewModel = new ResultViewModel(data);
-                var window = new ResultWindow { DataContext = viewModel };
+                var window = new ResultWindow
+                {
+                    DataContext = viewModel,
+                    Focusable = true,
+                    WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                    WindowState = WindowState.Normal,
+                };
                 window.Show();
                 return await viewModel.CompletionSource.Task;
             });
@@ -506,9 +529,15 @@ public class App : Avalonia.Application
         services.AddSingleton<ILocalSessionService, LocalSessionService>();
         services.AddSingleton<IAiProvider, CloudProvider>();
         services.AddSingleton<IAiProvider, LocalProvider>();
-        services.AddSingleton<IOsService, OsService>();
         services.AddSingleton<HardwareMonitoringService>();
         services.AddSingleton<LocalNativeManager>();
+        
+        // Add System Services
+        services.AddSingleton<HotkeyRecordingService>();
+        services.AddSingleton<IHotkeyRecordingService>(sp => sp.GetRequiredService<HotkeyRecordingService>());
+        services.AddSingleton<IHotkeyService, HotkeyService>();
+        services.AddSingleton<IClipboardService, ClipboardService>();
+        services.AddSingleton<ISystemService, SystemService>();
         
         // Model Download Services
         services.AddSingleton<IModelCatalogService, ModelCatalogService>();
@@ -529,13 +558,13 @@ public class App : Avalonia.Application
 
         // Add Platform-Specific Services
         if (OperatingSystem.IsLinux())
-            services.AddSingleton<IActiveWindowTracker, LinuxActiveWindowTracker>();
+            services.AddSingleton<IActiveWindowService, LinuxActiveWindowTracker>();
         else if (OperatingSystem.IsWindows())
-            services.AddSingleton<IActiveWindowTracker, WindowsActiveWindowTracker>();
+            services.AddSingleton<IActiveWindowService, WindowsActiveWindowTracker>();
         else if (OperatingSystem.IsMacOS())
-            services.AddSingleton<IActiveWindowTracker, MacOsActiveWindowTracker>();
+            services.AddSingleton<IActiveWindowService, MacOsActiveWindowTracker>();
         else
-            services.AddSingleton<IActiveWindowTracker, DefaultActiveWindowTracker>();
+            services.AddSingleton<IActiveWindowService, DefaultActiveWindowTracker>();
         
         // Add UI Services
         services.AddSingleton<DialogManager>();
@@ -596,7 +625,7 @@ public class App : Avalonia.Application
 
         // Dispose singleton infrastructure services
         Services.GetService<HardwareMonitoringService>()?.Dispose();
-        Services.GetService<IOsService>()?.Dispose();
+        Services.GetService<IHotkeyService>()?.Dispose();
         Services.GetService<LocalModelManagerService>()?.UnloadModel();
 
         logger?.LogInformation("Cleanup complete. Application will now exit.");

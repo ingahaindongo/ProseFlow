@@ -1,4 +1,5 @@
-﻿using System.Timers;
+﻿using System.Runtime.InteropServices;
+using System.Timers;
 using LibreHardwareMonitor.Hardware;
 using Microsoft.Extensions.Logging;
 using ProseFlow.Core.Models;
@@ -14,6 +15,7 @@ public class HardwareMonitoringService : IDisposable
     private readonly ILogger<HardwareMonitoringService> _logger;
     private readonly Computer _computer;
     private readonly Timer? _timer;
+    private readonly bool _isMonitoringAvailable = true;
 
     private HardwareMetrics _currentMetrics = new();
 
@@ -27,8 +29,14 @@ public class HardwareMonitoringService : IDisposable
 
     /// <summary>
     /// An event that is raised when the hardware metrics are updated.
+    /// This event will not fire if hardware monitoring is unavailable.
     /// </summary>
     public event Action<HardwareMetrics>? MetricsUpdated;
+    
+    /// <summary>
+    /// Gets a value indicating whether hardware monitoring is available.
+    /// </summary>
+    public bool IsMonitoringAvailable => _isMonitoringAvailable;
 
     public HardwareMonitoringService(ILogger<HardwareMonitoringService> logger)
     {
@@ -51,16 +59,23 @@ public class HardwareMonitoringService : IDisposable
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Hardware monitoring service failed to initialize.");
+            _isMonitoringAvailable = false;
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) &&
+                RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
+                _logger.LogWarning("Hardware monitoring service failed to initialize on macOS ARM64 architecture. This is likely due to a missing OSX-ARM64 version of MonoPosixHelper library.");
+            else
+                _logger.LogWarning(ex, "Hardware monitoring service failed to initialize, likely due to a missing native dependency for this OS/architecture. Hardware metrics will be unavailable.");
         }
     }
 
     /// <summary>
     /// Gets a snapshot of the latest hardware metrics.
+    /// Returns an empty metrics object if monitoring is unavailable.
     /// </summary>
     public HardwareMetrics GetCurrentMetrics()
     {
-        return _currentMetrics;
+        return !_isMonitoringAvailable ? new HardwareMetrics() : _currentMetrics;
     }
 
     private void InitializeTotalMetrics()
@@ -104,6 +119,8 @@ public class HardwareMonitoringService : IDisposable
 
     private void OnTimerElapsed(object? sender, ElapsedEventArgs e)
     {
+        if (!_isMonitoringAvailable) return;
+
         try
         {
             double cpuUsage = 0;
@@ -168,7 +185,8 @@ public class HardwareMonitoringService : IDisposable
     {
         _timer?.Stop();
         _timer?.Dispose();
-        _computer.Close();
+        if (_isMonitoringAvailable) _computer.Close();
+        
         GC.SuppressFinalize(this);
     }
 }

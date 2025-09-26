@@ -4,14 +4,14 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using ProseFlow.Core.Interfaces;
+using ProseFlow.Core.Interfaces.Os;
 
 namespace ProseFlow.UI.Services.ActiveWindow;
 
 /// <summary>
 /// Tracks the active window process on Microsoft Windows using Win32 API calls.
 /// </summary>
-public class WindowsActiveWindowTracker(ILogger<WindowsActiveWindowTracker> logger) : IActiveWindowTracker
+public class WindowsActiveWindowTracker(ILogger<WindowsActiveWindowTracker> logger) : IActiveWindowService
 {
     private const string UnknownProcess = "unknown.exe";
 

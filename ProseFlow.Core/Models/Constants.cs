@@ -12,7 +12,7 @@ public static class Constants
     public const string AppRepository = "https://github.com/LSXPrime/ProseFlow/";
     public const string ManifestUrl = "https://raw.githubusercontent.com/LSXPrime/ProseFlow/refs/heads/master/model-manifest.json";
     public const string AppIssuesUrl = "https://github.com/LSXPrime/ProseFlow/issues";
-    public const string AppSponsorsUrl = "https://github.com/LSXPrime/ProseFlow/?tab=readme-ov-file#-support-this-project";
+    public const string AppSponsorsUrl = "https://github.com/LSXPrime/ProseFlow/?tab=readme-ov-file#%EF%B8%8F-support-this-project";
     public const string AppDonationUrl = "https://ko-fi.com/lsxprime";
     public const string AppLicenseUrl = "https://github.com/LSXPrime/ProseFlow/blob/master/LICENSE.md";
 }

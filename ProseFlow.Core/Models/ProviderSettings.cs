@@ -17,7 +17,7 @@ public class ProviderSettings : EntityBase
     /// <summary>
     /// The number of CPU cores to allocate for local inference.
     /// </summary>
-    public int LocalCpuCores { get; set; } = 4;
+    public int LocalCpuCores { get; set; } = 4; // Environment.ProcessorCount;
 
     /// <summary>
     /// The context size for the local provider, determining the number of tokens to keep in memory.

@@ -24,9 +24,15 @@ public partial class LocalDashboardViewModel : DashboardViewModelBase, IDisposab
 
     public override string Title => "Local";
 
+    /// <summary>
+    /// Gets a value indicating whether the hardware monitoring sidebar should be visible.
+    /// </summary>
+    public bool IsHardwareMonitoringAvailable { get; }
+
     // KPIs
     [ObservableProperty] private long _totalLocalTokens;
     [ObservableProperty] private int _totalLocalActions;
+    [ObservableProperty] private string _inferenceSpeed = "N/A";
 
     // Live Hardware Metrics
     [ObservableProperty] private double _cpuUsagePercent;
@@ -39,9 +45,6 @@ public partial class LocalDashboardViewModel : DashboardViewModelBase, IDisposab
     [ObservableProperty] private double _vramFreeGb;
     [ObservableProperty] private double _vramUsagePercent;
 
-    // Inference Metrics
-    [ObservableProperty] private string _inferenceSpeed = "N/A";
-
     // Grid
     public ObservableCollection<ActionUsageDto> TopLocalActions { get; } = [];
     
@@ -53,6 +56,9 @@ public partial class LocalDashboardViewModel : DashboardViewModelBase, IDisposab
         _dashboardService = dashboardService;
         _hardwareMonitoringService = hardwareMonitoringService;
         _localNativeManager = localNativeManager;
+
+        // Determine if hardware monitoring is available and set the property for the UI to bind to.
+        IsHardwareMonitoringAvailable = _hardwareMonitoringService.IsMonitoringAvailable;
         
         // Subscribe to hardware updates and set initial state
         _hardwareMonitoringService.MetricsUpdated += OnMetricsUpdated;
@@ -105,7 +111,7 @@ public partial class LocalDashboardViewModel : DashboardViewModelBase, IDisposab
         // Update KPIs
         TotalLocalTokens = dailyUsage.Sum(d => d.PromptTokens + d.CompletionTokens);
         TotalLocalActions = await _dashboardService.GetTotalUsageCountAsync(startDate, endDate, "Local");
-        InferenceSpeed = $"{dailyUsage.Average(d => d.TokensPerSecond):F2} T/s";
+        InferenceSpeed = dailyUsage.Any() ? $"{dailyUsage.Average(d => d.TokensPerSecond):F2} T/s" : "N/A";
 
         // Update Grid
         TopLocalActions.Clear();

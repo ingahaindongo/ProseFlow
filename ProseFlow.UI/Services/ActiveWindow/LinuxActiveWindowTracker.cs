@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using ProseFlow.Core.Interfaces;
+using ProseFlow.Core.Interfaces.Os;
 
 namespace ProseFlow.UI.Services.ActiveWindow;
 
@@ -12,7 +12,7 @@ namespace ProseFlow.UI.Services.ActiveWindow;
 /// This implementation relies on the 'xprop' command-line utility.
 /// Note: This will not work on systems using Wayland by default due to its security architecture.
 /// </summary>
-public class LinuxActiveWindowTracker(ILogger<LinuxActiveWindowTracker> logger) : IActiveWindowTracker
+public class LinuxActiveWindowTracker(ILogger<LinuxActiveWindowTracker> logger) : IActiveWindowService
 {
     private const string UnknownProcess = "unknown.exe";
 

@@ -1,0 +1,181 @@
+﻿<shadui:Window
+    x:Class="ProseFlow.UI.Views.Windows.DiffViewWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:shadui="clr-namespace:ShadUI;assembly=ShadUI"
+    xmlns:vm="using:ProseFlow.UI.ViewModels.Windows"
+    xmlns:icons="clr-namespace:ProseFlow.UI.Controls.Icons"
+    xmlns:diff="clr-namespace:DiffPlex.DiffBuilder.Model;assembly=DiffPlex"
+    x:DataType="vm:DiffViewModel"
+
+    Title="{Binding ActionName}"
+    Icon="/Assets/logo.ico"
+    Width="800" Height="500" MinWidth="720" MinHeight="350"
+    WindowStartupLocation="CenterScreen"
+    CanResize="True"
+    ShowInTaskbar="False" Topmost="True"
+    SaveWindowState="True">
+
+    <Window.Styles>
+        <Style Selector="TextBlock.DiffPiece">
+            <Setter Property="FontFamily" Value="{StaticResource JetbrainsFont}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <Style Selector="TextBlock.SubPiece.Inserted">
+            <Setter Property="Background" Value="#99228B22" />
+        </Style>
+        <Style Selector="TextBlock.SubPiece.Deleted">
+            <Setter Property="Background" Value="#99FF0000" />
+        </Style>
+
+        <Style Selector="TextBlock.LineNumber">
+            <Setter Property="Opacity" Value="0.5" />
+            <Setter Property="TextAlignment" Value="Right" />
+            <Setter Property="Padding" Value="0,2,8,2" />
+            <Setter Property="MinWidth" Value="40" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+        </Style>
+    </Window.Styles>
+
+    <DockPanel LastChildFill="True" HorizontalAlignment="Stretch">
+        <!-- Footer with Action Buttons -->
+        <Border DockPanel.Dock="Bottom" Padding="16" HorizontalAlignment="Stretch"
+                BorderBrush="{DynamicResource BorderColor}" BorderThickness="0,1,0,0">
+            <Panel>
+                <!-- Default Footer -->
+                <DockPanel HorizontalAlignment="Stretch" IsVisible="{Binding !IsRefining}">
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8">
+                        <Button Classes="Outline" IsCancel="True" Command="{Binding CancelCommand}"
+                                CommandParameter="{Binding $parent[Window]}">
+                            <shadui:ButtonAssist.Icon>
+                                <icons:SymbolIcon Size="18" Symbol="X" />
+                            </shadui:ButtonAssist.Icon>
+                            Close
+                        </Button>
+                        <Button Classes="Primary" IsDefault="True" Command="{Binding AcceptCommand}"
+                                CommandParameter="{Binding $parent[Window]}">
+                            <shadui:ButtonAssist.Icon>
+                                <icons:SymbolIcon Size="18" Symbol="Check" />
+                            </shadui:ButtonAssist.Icon>
+                            Accept
+                        </Button>
+                    </StackPanel>
+
+                    <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="8">
+                        <Button Classes="Outline" Command="{Binding ToggleRefineCommand}">
+                            <shadui:ButtonAssist.Icon>
+                                <icons:SymbolIcon Size="18" Symbol="MessageSquarePlus" />
+                            </shadui:ButtonAssist.Icon>
+                            Refine...
+                        </Button>
+                        <Button Classes="Outline" Command="{Binding RegenerateCommand}"
+                                CommandParameter="{Binding $parent[Window]}">
+                            <shadui:ButtonAssist.Icon>
+                                <icons:SymbolIcon Size="18" Symbol="RefreshCw" />
+                            </shadui:ButtonAssist.Icon>
+                            Regenerate
+                        </Button>
+                        <Button Classes="Outline" Command="{Binding CopyCommand}">
+                            <shadui:ButtonAssist.Icon>
+                                <icons:SymbolIcon Size="18" Symbol="Copy" />
+                            </shadui:ButtonAssist.Icon>
+                            Copy
+                        </Button>
+                    </StackPanel>
+                </DockPanel>
+
+                <!-- Refinement Footer -->
+                <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsRefining}">
+                    <TextBox Name="RefineTextBox" Watermark="Refine the result... (e.g., 'Make it more formal')"
+                             Text="{Binding RefinementInstruction}" TextWrapping="Wrap"
+                             VerticalAlignment="Center" MinWidth="450"
+                             KeyDown="RefineTextBox_OnKeyDown" />
+                    <Button Classes="Primary" Command="{Binding SubmitRefinementCommand}"
+                            CommandParameter="{Binding $parent[Window]}">
+                        <shadui:ButtonAssist.Icon>
+                            <icons:SymbolIcon Size="18" Symbol="Send" />
+                        </shadui:ButtonAssist.Icon>
+                        Send
+                    </Button>
+                    <Button Classes="Outline" Command="{Binding ToggleRefineCommand}" Content="Cancel" />
+                </StackPanel>
+            </Panel>
+        </Border>
+
+        <!-- Main Content: Side-by-Side Diff View in a Card -->
+        <ScrollViewer Padding="16">
+            <shadui:Card>
+                <shadui:Card.Header>
+                    <shadui:CardTitle>Review Changes</shadui:CardTitle>
+                </shadui:Card.Header>
+                <Grid ColumnDefinitions="*, Auto, *" RowDefinitions="Auto, *">
+
+                    <!-- Headers -->
+                    <TextBlock Grid.Column="0" Grid.Row="0" Text="Original" Classes="Small Muted" Margin="0,0,0,8" />
+                    <TextBlock Grid.Column="2" Grid.Row="0" Text="Suggested" Classes="Small Muted" Margin="0,0,0,8" />
+
+                    <!-- Original Text Panel -->
+                    <ScrollViewer Grid.Column="0" Grid.Row="1" Name="LeftScrollViewer"
+                                  HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible">
+                        <ItemsControl ItemsSource="{Binding DiffModel.OldText.Lines}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="diff:DiffPiece">
+                                    <DockPanel MinHeight="20">
+                                        <TextBlock DockPanel.Dock="Left" Text="{Binding Position}"
+                                                   Classes="LineNumber DiffPiece" />
+                                        <ItemsControl ItemsSource="{Binding SubPieces}" Margin="0,0,16,0">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate DataType="diff:DiffPiece">
+                                                    <TextBlock Text="{Binding Text}" Classes="DiffPiece SubPiece"
+                                                               Classes.Deleted="{Binding Type, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static diff:ChangeType.Deleted}}" />
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <!-- Separator -->
+                    <Border Grid.Column="1" Grid.Row="1" Background="Black" Width="1" VerticalAlignment="Stretch" Margin="16,0" />
+
+                    <!-- Generated Text Panel -->
+                    <ScrollViewer Grid.Column="2" Grid.Row="1" Name="RightScrollViewer"
+                                  HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible">
+                        <ItemsControl ItemsSource="{Binding DiffModel.NewText.Lines}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="diff:DiffPiece">
+                                    <DockPanel MinHeight="20">
+                                        <TextBlock DockPanel.Dock="Left" Text="{Binding Position}"
+                                                   Classes="LineNumber DiffPiece" />
+                                        <ItemsControl ItemsSource="{Binding SubPieces}" Margin="0,0,16,0">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate DataType="diff:DiffPiece">
+                                                    <TextBlock Text="{Binding Text}" Classes="DiffPiece SubPiece"
+                                                               Classes.Inserted="{Binding Type, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static diff:ChangeType.Inserted}}" />
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </shadui:Card>
+        </ScrollViewer>
+    </DockPanel>
+</shadui:Window>

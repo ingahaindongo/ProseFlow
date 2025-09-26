@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 using Avalonia.Controls.ApplicationLifetimes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ProseFlow.Application.Events;
+using ProseFlow.Application.DTOs;
+using ProseFlow.Core.Enums;
 using ProseFlow.Core.Models;
 using ProseFlow.UI.ViewModels.Actions;
 using Action = ProseFlow.Core.Models.Action;
@@ -134,26 +135,27 @@ public partial class FloatingActionMenuViewModel : ViewModelBase
     {
         ShouldClose = false;
 
-        // Prioritize custom instruction if it exists
+        OutputMode mode = ResultContainer switch
+        {
+            "In-place" => OutputMode.InPlace,
+            "Windowed" => OutputMode.Windowed,
+            "Diff" => OutputMode.Diff,
+            _ => OutputMode.Default
+        };
+
         if (IsCustomInstructionActive && !string.IsNullOrWhiteSpace(CustomInstruction))
         {
             var customAction = new Action
             {
                 Name = "Custom Instruction",
                 Instruction = CustomInstruction,
-                OpenInWindow = false, // Default for custom actions is in-place replacement
+                OpenInWindow = mode == OutputMode.Windowed,
                 ExplainChanges = false,
                 Prefix = string.Empty,
                 Icon = "Sparkles"
             };
 
-            var forceOpenInWindow = ResultContainer == "Default" ? customAction.OpenInWindow : ResultContainer == "Windowed";
-
-            var request = new ActionExecutionRequest(
-                customAction,
-                forceOpenInWindow,
-                CurrentServiceTypeName
-            );
+            var request = new ActionExecutionRequest(customAction, mode, CurrentServiceTypeName);
 
             if (!_selectionTcs.Task.IsCompleted)
                 _selectionTcs.SetResult(request);
@@ -174,15 +176,7 @@ public partial class FloatingActionMenuViewModel : ViewModelBase
             // If an action item is selected, execute it
             case ActionItemViewModel actionItem:
             {
-                var forceOpenInWindow = ResultContainer == "Default" 
-                    ? actionItem.Action.OpenInWindow 
-                    : ResultContainer == "Windowed";
-
-                var request = new ActionExecutionRequest(
-                    actionItem.Action,
-                    forceOpenInWindow,
-                    CurrentServiceTypeName
-                );
+                var request = new ActionExecutionRequest(actionItem.Action, mode, CurrentServiceTypeName);
 
                 if (!_selectionTcs.Task.IsCompleted)
                     _selectionTcs.SetResult(request);
@@ -212,7 +206,7 @@ public partial class FloatingActionMenuViewModel : ViewModelBase
     [RelayCommand]
     private void ToggleResultContainer()
     {
-        var states = new[] { "Default", "Windowed", "In-place" };
+        var states = new[] { "Default", "Windowed", "In-place", "Diff" };
         var currentIndex = Array.IndexOf(states, ResultContainer);
         ResultContainer = states[(currentIndex + 1) % states.Length];
     }

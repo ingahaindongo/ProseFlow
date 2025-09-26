@@ -462,6 +462,23 @@ public class App : Avalonia.Application
             });
         };
 
+        AppEvents.ShowDiffViewRequested += data =>
+        {
+            return Dispatcher.UIThread.InvokeAsync(async () =>
+            {
+                var viewModel = new DiffViewModel(data);
+                var window = new DiffViewWindow
+                {
+                    DataContext = viewModel,
+                    Focusable = true,
+                    WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                    WindowState = WindowState.Normal,
+                };
+                window.Show();
+                return await viewModel.CompletionSource.Task;
+            });
+        };
+
         AppEvents.ShowFloatingMenuRequested += async (actions, context) =>
         {
             var providerSettings = await Services.GetRequiredService<SettingsService>().GetProviderSettingsAsync();

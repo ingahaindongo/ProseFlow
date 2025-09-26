@@ -25,6 +25,18 @@
         <c:StringToIconConverter x:Key="StringToIconConverter" />
     </Window.Resources>
 
+    <Window.Styles>
+        <Style Selector="Button.ResultContainer.Default icons|SymbolIcon, Button.ResultContainer.Windowed icons|SymbolIcon">
+            <Setter Property="Symbol" Value="AppWindow" />
+        </Style>
+        <Style Selector="Button.ResultContainer.In-place icons|SymbolIcon">
+            <Setter Property="Symbol" Value="Replace" />
+        </Style>
+        <Style Selector="Button.ResultContainer.Diff icons|SymbolIcon">
+            <Setter Property="Symbol" Value="GitCompareArrows" />
+        </Style>
+    </Window.Styles>
+
     <shadui:Card Padding="0" HasShadow="True">
         <DockPanel>
             <!-- Search Bar Area -->
@@ -63,11 +75,15 @@
                     </Button>
                     <Button
                         DockPanel.Dock="Left"
-                        Classes="Ghost"
+                        Classes="Ghost ResultContainer"
                         Command="{Binding ToggleResultContainerCommand}"
-                        ToolTip.Tip="Toggle the Final form of the result">
+                        ToolTip.Tip="Toggle the final form of the result"
+                        Classes.Default="{Binding ResultContainer, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Default}"
+                        Classes.Windowed="{Binding ResultContainer, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Windowed}"
+                        Classes.In-place="{Binding ResultContainer, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=In-place}"
+                        Classes.Diff="{Binding ResultContainer, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Diff}">
                         <shadui:ButtonAssist.Icon>
-                            <icons:SymbolIcon Size="18" Symbol="AppWindow" />
+                            <icons:SymbolIcon Size="18" />
                         </shadui:ButtonAssist.Icon>
                         <TextBlock Classes="Small" Text="{Binding ResultContainer}" Margin="4,0,0,0" />
                     </Button>

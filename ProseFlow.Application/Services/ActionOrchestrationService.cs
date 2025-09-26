@@ -91,7 +91,7 @@ public class ActionOrchestrationService : IDisposable
             return;
         }
 
-        var request = new ActionExecutionRequest(result.Action, result.Action.OpenInWindow, null);
+        var request = new ActionExecutionRequest(result.Action, OutputMode.InPlace, null); // Smart Paste is always InPlace
         await ProcessRequestAsync(request);
     }
 
@@ -122,84 +122,21 @@ public class ActionOrchestrationService : IDisposable
             conversationHistory.Add(new ChatMessage("system", systemInstruction));
             conversationHistory.Add(new ChatMessage("user", $"{request.ActionToExecute.Prefix}{userInput}"));
 
-            if (request.ForceOpenInWindow || request.ActionToExecute.OpenInWindow)
+            var outputMode = request.Mode == OutputMode.Default
+                ? (request.ActionToExecute.OpenInWindow ? OutputMode.Windowed : OutputMode.InPlace)
+                : request.Mode;
+
+            switch (outputMode)
             {
-                // Windowed processing loop
-                while (true)
-                {
-                    var executionResult = await ExecuteRequestWithFallbackAsync(conversationHistory, request.ProviderOverride, localSessionId);
-
-                    if (executionResult is null)
-                    {
-                        // Both primary and fallback failed, or no providers are configured.
-                        AppEvents.RequestNotification("All available AI providers failed.", NotificationType.Error);
-                        break;
-                    }
-
-                    if (executionResult.Value.Provider.Type == ProviderType.Local && localSessionId is null)
-                    {
-                        // If this is the first turn in a windowed local session. Create a new session.
-                        localSessionId = _localSessionService.StartSession();
-                        if (localSessionId is null)
-                        {
-                            AppEvents.RequestNotification("Failed to start a local model session.", NotificationType.Error);
-                            return;
-                        }
-                    }
-
-                    var (aiResponse, provider, latencyMs) = executionResult.Value;
-                    conversationHistory.Add(new ChatMessage("assistant", aiResponse.Content));
-
-                    // Log to DB
-                    await LogToHistoryAsync(
-                        request.ActionToExecute.Name,
-                        provider.Name,
-                        aiResponse.ProviderName,
-                        conversationHistory.Last(m => m.Role == "user").Content,
-                        aiResponse.Content,
-                        aiResponse.PromptTokens,
-                        aiResponse.CompletionTokens,
-                        latencyMs,
-                        aiResponse.TokensPerSecond);
-
-                    // Parse and show the result window
-                    var (mainOutput, explanation) = ParseOutput(aiResponse.Content, request.ActionToExecute.ExplainChanges);
-
-                    // Show the window and wait for the user to either close it or request a refinement
-                    var windowData = new ResultWindowData(request.ActionToExecute.Name, mainOutput, explanation);
-                    var refinementRequest = await AppEvents.RequestResultWindowAsync(windowData);
-
-                    if (refinementRequest is null)
-                        break; // User closed the window
-
-                    conversationHistory.Add(new ChatMessage("user", refinementRequest.NewInstruction));
-                }
-            }
-            else
-            {
-                // In-Place execution
-                var executionResult = await ExecuteRequestWithFallbackAsync(conversationHistory, request.ProviderOverride);
-
-                if (executionResult is null)
-                {
-                    AppEvents.RequestNotification("All available AI providers failed.", NotificationType.Error);
-                    return;
-                }
-
-                var (aiResponse, provider, latencyMs) = executionResult.Value;
-
-                await LogToHistoryAsync(
-                    request.ActionToExecute.Name,
-                    provider.Name,
-                    aiResponse.ProviderName,
-                    conversationHistory.Last(m => m.Role == "user").Content,
-                    aiResponse.Content,
-                    aiResponse.PromptTokens,
-                    aiResponse.CompletionTokens,
-                    latencyMs,
-                    aiResponse.TokensPerSecond);
-                
-                await _clipboardService.PasteTextAsync(aiResponse.Content);
+                case OutputMode.Windowed:
+                    localSessionId = await HandleWindowedModeAsync(request, conversationHistory, localSessionId);
+                    break;
+                case OutputMode.InPlace:
+                    await HandleInPlaceModeAsync(request, conversationHistory);
+                    break;
+                case OutputMode.Diff:
+                    localSessionId = await HandleDiffModeAsync(request, userInput, conversationHistory, localSessionId);
+                    break;
             }
 
             overallStopwatch.Stop();
@@ -220,6 +157,138 @@ public class ActionOrchestrationService : IDisposable
             if (localSessionId.HasValue) _localSessionService.EndSession(localSessionId.Value);
         }
     }
+
+    private async Task<Guid?> HandleWindowedModeAsync(ActionExecutionRequest request, List<ChatMessage> conversationHistory, Guid? localSessionId)
+    {
+        while (true)
+        {
+            var executionResult = await ExecuteRequestWithFallbackAsync(conversationHistory, request.ProviderOverride, localSessionId);
+
+            if (executionResult is null)
+            {
+                AppEvents.RequestNotification("All available AI providers failed.", NotificationType.Error);
+                break;
+            }
+
+            if (executionResult.Value.Provider.Type == ProviderType.Local && localSessionId is null)
+            {
+                localSessionId = _localSessionService.StartSession();
+                if (localSessionId is null)
+                {
+                    AppEvents.RequestNotification("Failed to start a local model session.", NotificationType.Error);
+                    return localSessionId;
+                }
+            }
+
+            var (aiResponse, provider, latencyMs) = executionResult.Value;
+            conversationHistory.Add(new ChatMessage("assistant", aiResponse.Content));
+
+            await LogToHistoryAsync(
+                request.ActionToExecute.Name,
+                provider.Name,
+                aiResponse.ProviderName,
+                conversationHistory.Last(m => m.Role == "user").Content,
+                aiResponse.Content,
+                aiResponse.PromptTokens,
+                aiResponse.CompletionTokens,
+                latencyMs,
+                aiResponse.TokensPerSecond);
+
+            var (mainOutput, explanation) = ParseOutput(aiResponse.Content, request.ActionToExecute.ExplainChanges);
+            var windowData = new ResultWindowData(request.ActionToExecute.Name, mainOutput, explanation);
+            var refinementRequest = await AppEvents.RequestResultWindowAsync(windowData);
+
+            if (refinementRequest is null) break;
+
+            conversationHistory.Add(new ChatMessage("user", refinementRequest.NewInstruction));
+        }
+        return localSessionId;
+    }
+
+    private async Task HandleInPlaceModeAsync(ActionExecutionRequest request, List<ChatMessage> conversationHistory)
+    {
+        var executionResult = await ExecuteRequestWithFallbackAsync(conversationHistory, request.ProviderOverride);
+
+        if (executionResult is null)
+        {
+            AppEvents.RequestNotification("All available AI providers failed.", NotificationType.Error);
+            return;
+        }
+
+        var (aiResponse, provider, latencyMs) = executionResult.Value;
+
+        await LogToHistoryAsync(
+            request.ActionToExecute.Name,
+            provider.Name,
+            aiResponse.ProviderName,
+            conversationHistory.Last(m => m.Role == "user").Content,
+            aiResponse.Content,
+            aiResponse.PromptTokens,
+            aiResponse.CompletionTokens,
+            latencyMs,
+            aiResponse.TokensPerSecond);
+        
+        await _clipboardService.PasteTextAsync(aiResponse.Content);
+    }
+    
+    private async Task<Guid?> HandleDiffModeAsync(ActionExecutionRequest request, string originalInput, List<ChatMessage> conversationHistory, Guid? localSessionId)
+    {
+        while (true)
+        {
+            var executionResult = await ExecuteRequestWithFallbackAsync(conversationHistory, request.ProviderOverride, localSessionId);
+
+            if (executionResult is null)
+            {
+                AppEvents.RequestNotification("All available AI providers failed.", NotificationType.Error);
+                return localSessionId;
+            }
+            
+            var (aiResponse, provider, latencyMs) = executionResult.Value;
+            
+            if (provider.Type == ProviderType.Local && localSessionId is null)
+            {
+                localSessionId = _localSessionService.StartSession();
+                if (localSessionId is null)
+                {
+                    AppEvents.RequestNotification("Failed to start a local model session.", NotificationType.Error);
+                    return localSessionId;
+                }
+            }
+            
+            var diffData = new DiffViewData(request.ActionToExecute.Name, originalInput, aiResponse.Content);
+            var userDecision = await AppEvents.RequestDiffViewAsync(diffData);
+
+            switch (userDecision)
+            {
+                case Accepted accepted:
+                    await LogToHistoryAsync(
+                        request.ActionToExecute.Name,
+                        provider.Name,
+                        aiResponse.ProviderName,
+                        conversationHistory.Last(m => m.Role == "user").Content,
+                        accepted.NewText,
+                        aiResponse.PromptTokens,
+                        aiResponse.CompletionTokens,
+                        latencyMs,
+                        aiResponse.TokensPerSecond);
+                    await _clipboardService.PasteTextAsync(accepted.NewText);
+                    return localSessionId; 
+                
+                case Refined refined:
+                    // The last message in history is the assistant's previous response. Add it before the user's refinement.
+                    conversationHistory.Add(new ChatMessage("assistant", aiResponse.Content));
+                    conversationHistory.Add(new ChatMessage("user", refined.RefinementInstruction));
+                    continue;
+
+                case Regenerated:
+                    continue;
+
+                case Cancelled or null:
+                    return localSessionId;
+            }
+        }
+    }
+
 
     /// <summary>
     /// Executes an AI request, trying the primary provider first and then the fallback provider upon failure.

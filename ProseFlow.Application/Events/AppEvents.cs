@@ -3,14 +3,6 @@ using Action = ProseFlow.Core.Models.Action;
 
 namespace ProseFlow.Application.Events;
 
-/// <summary>
-/// A request to execute a specific action with potential overrides.
-/// </summary>
-/// <param name="ActionToExecute">The action chosen by the user.</param>
-/// <param name="ForceOpenInWindow">Whether the user overrode the default behavior to force opening a new window.</param>
-/// <param name="ProviderOverride">Optional provider name to override the default for this single execution.</param>
-public record ActionExecutionRequest(Action ActionToExecute, bool ForceOpenInWindow, string? ProviderOverride);
-
 public enum NotificationType { Info, Success, Warning, Error }
 
 public static class AppEvents
@@ -72,7 +64,26 @@ public static class AppEvents
         return ShowResultWindowAndAwaitRefinement is not null
             ? await ShowResultWindowAndAwaitRefinement.Invoke(data)
             : await Task.FromResult<RefinementRequest?>(null);
-        // Graceful failure
+    }
+    
+    /// <summary>
+    /// Raised when a diff view needs to be displayed.
+    /// The UI subscribes, shows the diff window, and returns a task that completes
+    /// with the user's decision (Accept, Refine, Regenerate, or Cancel).
+    /// </summary>
+    public static event Func<DiffViewData, Task<DiffViewResult?>>? ShowDiffViewRequested;
+
+    /// <summary>
+    /// Invokes the event to show the diff view window and waits for user interaction.
+    /// </summary>
+    /// <returns>A DiffViewResult representing the user's choice, or null if the UI handler isn't attached.</returns>
+    public static async Task<DiffViewResult?> RequestDiffViewAsync(DiffViewData data)
+    {
+        if (!IsShowResultWindowEnabled) return null; 
+
+        return ShowDiffViewRequested is not null
+            ? await ShowDiffViewRequested.Invoke(data)
+            : await Task.FromResult<DiffViewResult?>(null);
     }
 
     /// <summary>

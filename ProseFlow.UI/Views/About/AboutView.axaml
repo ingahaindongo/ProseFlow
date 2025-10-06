@@ -169,6 +169,12 @@
                             </shadui:ButtonAssist.Icon>
                             Buy Me a Ko-fi
                         </Button>
+                        <Button Classes="Outline" Command="{Binding OpenLogFolderCommand}">
+                            <shadui:ButtonAssist.Icon>
+                                <icons:SymbolIcon Symbol="FileText" Size="16" />
+                            </shadui:ButtonAssist.Icon>
+                            Open Log Folder
+                        </Button>
                     </WrapPanel>
                 </shadui:Card>
 

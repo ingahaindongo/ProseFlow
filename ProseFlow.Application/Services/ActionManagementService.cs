@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ProseFlow.Application.DTOs;
 using ProseFlow.Application.Events;
+using ProseFlow.Core.Enums;
 using ProseFlow.Core.Interfaces;
 using ProseFlow.Core.Models;
 using Action = ProseFlow.Core.Models.Action;
@@ -165,6 +166,72 @@ public class ActionManagementService(IServiceScopeFactory scopeFactory, ILogger<
             }
         });
     }
+    
+    /// <summary>
+    /// Toggles the favorite status of an action.
+    /// </summary>
+    /// <param name="actionId">The ID of the action to toggle.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    public Task ToggleFavoriteAsync(int actionId)
+    {
+        return ExecuteCommandAsync(async unitOfWork =>
+        {
+            var action = await unitOfWork.Actions.GetByIdAsync(actionId);
+            if (action is not null)
+            {
+                action.IsFavorite = !action.IsFavorite;
+                unitOfWork.Actions.Update(action);
+            }
+        });
+    }
+    
+    /// <summary>
+    /// Gets a curated list of the most relevant actions based on a priority system:
+    /// Favorites > Context-Specific > Recently Used.
+    /// </summary>
+    /// <param name="appContext">The process name of the currently active application.</param>
+    /// <param name="count">The maximum number of actions to return.</param>
+    /// <returns>A list of the most relevant actions.</returns>
+    public async Task<List<Action>> GetRelevantActionsAsync(string appContext, int count = 5)
+    {
+        return await ExecuteQueryAsync(async unitOfWork =>
+        {
+            var addedActionIds = new HashSet<int>();
+
+            // 1. Favorites (Highest Priority)
+            var favorites = (await unitOfWork.Actions.GetByExpressionAsync(a => a.IsFavorite))
+                .OrderBy(a => a.SortOrder).ToList();
+            var relevantActions = favorites.Where(fav => addedActionIds.Add(fav.Id)).ToList();
+            if (relevantActions.Count >= count) return relevantActions.Take(count).ToList();
+
+            // 2. Contextual Actions
+            var allActions = await unitOfWork.Actions.GetAllAsync();
+            var contextualActions = allActions
+                .Where(a => a.ApplicationContext.Contains(appContext, StringComparer.OrdinalIgnoreCase))
+                .OrderBy(a => a.SortOrder).ToList();
+            foreach (var ctx in contextualActions)
+            {
+                if (addedActionIds.Add(ctx.Id)) 
+                    relevantActions.Add(ctx);
+                if (relevantActions.Count >= count) 
+                    return relevantActions.Take(count).ToList();
+            }
+
+            // 3. Recent Actions
+            var recentHistory = await unitOfWork.History.GetRecentAsync(20);
+            var recentActionNames = recentHistory.Select(h => h.ActionName).Distinct().ToList();
+
+            foreach (var recentAction in recentActionNames.Select(actionName => allActions.FirstOrDefault(a => a.Name.Equals(actionName, StringComparison.OrdinalIgnoreCase))))
+            {
+                if (recentAction != null && addedActionIds.Add(recentAction.Id)) 
+                    relevantActions.Add(recentAction);
+                if (relevantActions.Count >= count) 
+                    break;
+            }
+
+            return relevantActions.Take(count).ToList();
+        });
+    }
 
     #endregion
 
@@ -183,7 +250,7 @@ public class ActionManagementService(IServiceScopeFactory scopeFactory, ILogger<
                     Prefix = a.Prefix,
                     Instruction = a.Instruction,
                     Icon = a.Icon,
-                    OpenInWindow = a.OpenInWindow,
+                    OutputMode = a.OutputMode,
                     ExplainChanges = a.ExplainChanges,
                     ApplicationContext = a.ApplicationContext
                 }));
@@ -199,7 +266,7 @@ public class ActionManagementService(IServiceScopeFactory scopeFactory, ILogger<
         await ImportActionsFromJsonStreamAsync(fileStream);
     }
     
-    public async Task ImportActionsFromJsonStreamAsync(Stream jsonStream)
+    public async Task ImportActionsFromJsonStreamAsync(Stream jsonStream, ActionConflictResolutionStrategy strategy = ActionConflictResolutionStrategy.Prompt)
     {
         var importedGroups = await JsonSerializer.DeserializeAsync<Dictionary<string, Dictionary<string, ActionDto>>>(jsonStream);
 
@@ -230,15 +297,28 @@ public class ActionManagementService(IServiceScopeFactory scopeFactory, ILogger<
                 nonConflicts.Add((groupName, actionName, dto));
         }
 
-        // Request User Resolution for Conflicts
+        // Resolve Conflicts based on strategy
         List<ActionConflict>? resolvedConflicts = null;
         if (conflicts.Count > 0)
         {
-            resolvedConflicts = await AppEvents.RequestConflictResolutionAsync(conflicts);
-            if (resolvedConflicts is null)
+            switch (strategy)
             {
-                AppEvents.RequestNotification("Import canceled by user.", NotificationType.Info);
-                return; // User canceled the dialog
+                case ActionConflictResolutionStrategy.Prompt:
+                    resolvedConflicts = await AppEvents.RequestConflictResolutionAsync(conflicts);
+                    if (resolvedConflicts is null)
+                    {
+                        AppEvents.RequestNotification("Import canceled by user.", NotificationType.Info);
+                        return; // User canceled the dialog
+                    }
+                    break;
+                case ActionConflictResolutionStrategy.Overwrite:
+                    resolvedConflicts = conflicts.Select(c => c with { Resolution = ConflictResolutionType.Overwrite }).ToList();
+                    break;
+                case ActionConflictResolutionStrategy.Skip:
+                    resolvedConflicts = conflicts.Select(c => c with { Resolution = ConflictResolutionType.Skip }).ToList();
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(strategy), strategy, "Invalid conflict resolution strategy.");
             }
         }
 
@@ -262,9 +342,9 @@ public class ActionManagementService(IServiceScopeFactory scopeFactory, ILogger<
                         actionToUpdate.Prefix = conflict.ImportedActionDto.Prefix;
                         actionToUpdate.Instruction = conflict.ImportedActionDto.Instruction;
                         actionToUpdate.Icon = conflict.ImportedActionDto.Icon;
-                        actionToUpdate.OpenInWindow = conflict.ImportedActionDto.OpenInWindow;
+                        actionToUpdate.OutputMode = conflict.ImportedActionDto.OutputMode;
                         actionToUpdate.ExplainChanges = conflict.ImportedActionDto.ExplainChanges;
-                        actionToUpdate.ApplicationContext = conflict.ImportedActionDto.ApplicationContext;
+                        actionToUpdate.ApplicationContext = conflict.ImportedActionDto.ApplicationContext.ToList();
                         unitOfWork.Actions.Update(actionToUpdate);
                         break;
                         
@@ -274,6 +354,8 @@ public class ActionManagementService(IServiceScopeFactory scopeFactory, ILogger<
                         var groupName = importedGroups.FirstOrDefault(g => g.Value.ContainsKey(conflict.ExistingAction.Name)).Key;
                         await CreateNewActionAsync(unitOfWork, newName, groupName, conflict.ImportedActionDto, existingGroups, ++maxActionSortOrder, ++maxGroupSortOrder);
                         break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(conflict.Resolution), conflict.Resolution, "Invalid conflict resolution type.");
                 }
             }
         }
@@ -285,7 +367,9 @@ public class ActionManagementService(IServiceScopeFactory scopeFactory, ILogger<
         }
 
         await unitOfWork.SaveChangesAsync();
-        AppEvents.RequestNotification("Actions imported successfully.", NotificationType.Success);
+        
+        if (strategy == ActionConflictResolutionStrategy.Prompt) 
+            AppEvents.RequestNotification("Actions imported successfully.", NotificationType.Success);
     }
 
     #endregion
@@ -324,9 +408,9 @@ public class ActionManagementService(IServiceScopeFactory scopeFactory, ILogger<
             Prefix = dto.Prefix,
             Instruction = dto.Instruction,
             Icon = dto.Icon,
-            OpenInWindow = dto.OpenInWindow,
+            OutputMode = dto.OutputMode,
             ExplainChanges = dto.ExplainChanges,
-            ApplicationContext = dto.ApplicationContext,
+            ApplicationContext = dto.ApplicationContext.ToList(),
             ActionGroupId = group.Id,
             ActionGroup = group,
             SortOrder = actionSortOrder

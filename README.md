@@ -46,6 +46,14 @@ Its unique hybrid engine allows you to seamlessly switch between the world's bes
     <td><img src="https://raw.githubusercontent.com/LSXPrime/_resources/refs/heads/main/ProseFlow/screenshot-actions.png" alt="Action Management"></td>
     <td><img src="https://raw.githubusercontent.com/LSXPrime/_resources/refs/heads/main/ProseFlow/screenshot-local-model-library.png" alt="Local Model Library"></td>
   </tr>
+  <tr>
+    <td align="center"><strong>Floating Orb & Arc Menu</strong></td>
+    <td align="center"><strong>Workspace Sync Management</strong></td>
+  </tr>
+  <tr>
+    <td><img src="https://raw.githubusercontent.com/LSXPrime/_resources/refs/heads/main/ProseFlow/screenshot-workspace-sync.png" alt="Workspace Sync Management"></td>
+    <td><img src="https://raw.githubusercontent.com/LSXPrime/_resources/refs/heads/main/ProseFlow/screenshot-arc-menu.png" alt="Floating Orb & Arc Menu"></td>
+  </tr>
 </table>
 
 ---
@@ -76,14 +84,23 @@ Its unique hybrid engine allows you to seamlessly switch between the world's bes
 
 ProseFlow is packed with features designed for power, privacy, and productivity.
 
-#### 🚀 Core Workflow
+#### 🚀 Core Workflow & UI
 
 *   **Global Hotkey Activation:** Access ProseFlow from **any application** with a customizable system-wide hotkey.
+*   **Floating Action Orb:** A persistent on-screen button providing visual feedback on background tasks and a new way to trigger actions.
+*   **Radial Arc Menu:** Drag and drop text onto the orb to instantly bring up a context-aware radial menu of your favorite actions.
 *   **Floating Action Menu:** An elegant, **searchable menu** of your AI actions appears right where you need it.
 *   **Smart Paste:** Assign a dedicated hotkey to your most frequent action for **one-press text transformation**.
-*   **Flexible Output:** Choose to have results **instantly replace** your text or open in an **interactive window** for review.
+*   **Flexible Output Modes:** Choose to have results instantly **replace** your text, open in an **interactive window** for review, or view as a side-by-side **diff**.
 *   **Iterative Refinement:** **Conversationally refine** AI output in the result window until it's perfect.
 *   **Context-Aware Actions:** Configure actions to only appear when you're in **specific applications**.
+
+#### 🤝 Workspace & Collaboration
+
+*   **Workspace Sync:** Share your actions and provider configurations across devices or with your team by syncing to a shared folder (e.g., on a network drive or cloud service).
+*   **Password-Protected Encryption:** Sensitive data like API keys are encrypted with a workspace password, ensuring only authorized users can access them.
+*   **Automatic & Manual Sync:** Choose to sync automatically in the background or get notified of changes to sync manually.
+*   **Conflict Resolution:** Intelligently handle cases where imported actions conflict with existing ones.
 
 #### 🧠 Hybrid AI Engine
 
@@ -92,10 +109,12 @@ ProseFlow is packed with features designed for power, privacy, and productivity.
 *   **Connect to Cloud APIs:** Integrates with **OpenAI, Groq, Anthropic, Google**, and any **OpenAI-compatible endpoint**.
 *   **Intelligent Fallback Chain:** Configure multiple cloud providers. If one fails, ProseFlow **automatically tries the next**.
 *   **Secure Credential Storage:** API keys are **always encrypted** and stored securely on your local machine.
+*   **Advanced Local Model Control:** Fine-tune performance with specific GPU selection, thread count, and advanced memory options.
 
 #### 🛠️ Customization & Management
 
 *   **Custom AI Actions:** Create **reusable AI instructions** with unique names, icons, and system prompts.
+*   **Action Favorites:** Mark your most-used actions as favorites for prioritized access in the Arc Menu and main action menu.
 *   **Action Groups:** Organize your actions into logical groups with a **drag-and-drop interface**.
 *   **Import & Export:** **Share your action sets** with others or back up your configuration to a JSON file.
 *   **Action Presets:** Get started quickly by importing **curated sets of actions** for common tasks like writing, coding, and more.
@@ -103,6 +122,8 @@ ProseFlow is packed with features designed for power, privacy, and productivity.
 #### 📊 Dashboard & Analytics
 
 *   **Usage Dashboard:** Visualize your **token usage over time** for both cloud and local models.
+*   **Live Task Monitoring:** A new "Active Processes" widget shows all ongoing AI tasks and allows you to **cancel them**.
+*   **Live Application Log:** A real-time log console in the dashboard for advanced diagnostics and troubleshooting.
 *   **Performance Monitoring:** Track **provider latency** and **tokens/second** to optimize your setup.
 *   **Live Hardware Monitor:** See real-time **CPU, GPU, RAM, and VRAM usage** when running local models.
 *   **Interaction History:** Review a **detailed log** of all your past AI operations.
@@ -111,7 +132,7 @@ ProseFlow is packed with features designed for power, privacy, and productivity.
 
 *   **Cross-Platform:** Native support for **Windows, macOS, and Linux**.
 *   **System Tray Control:** Runs quietly in the background with a **tray icon for quick access** to key functions.
-*   **Launch at Login:** Configure ProseFlow to **start automatically** with your system.
+*   **Launch at Login:** Configure ProseFlow to **start automatically** with your system, optionally minimized to the tray.
 *   **Guided Onboarding:** A **smooth setup process** for new users to get configured in minutes.
 
 ---
@@ -124,28 +145,50 @@ The easiest way to get started is by downloading the latest version from our off
 
 The website will automatically suggest the best download for your operating system (Windows, macOS, or Linux).
 
-1. **Download the Installer:** Click the main download button on the website for your detected OS, or choose a specific
-   version from the options below it.
-2. **Install & Run:** Install the application like any other.
-3. **Onboarding:** The first time you run ProseFlow, a guided setup window will help you configure your first AI
-   provider and set your global hotkey. You'll be ready in minutes!
+1.  **Download the Installer:** Click the main download button on the website for your detected OS, or choose a specific
+    version from the options below it.
+2.  **Install & Run:** Install the application like any other.
+3.  **Onboarding:** The first time you run ProseFlow, a guided setup window will help you configure your first AI
+    provider and set your global hotkey. You'll be ready in minutes!
 
 For advanced users who need access to all builds, portable versions, or detailed release notes, you can visit
 the [GitHub Releases page](https://github.com/LSXPrime/ProseFlow/releases).
+
+
+#### macOS Installation & Permissions
+
+Due to Apple's security policies, you will need to perform a few extra steps to run ProseFlow on macOS:
+
+1.  **Open the App for the First Time:**
+    *   After downloading, move `ProseFlow.app` to your `Applications` folder.
+    *   Right-click the app and select "Open".
+    *   You will see a warning that the developer is unidentified. This is expected. Click "Open" again to confirm. You only need to do this once.
+
+2.  **Grant Required Permissions:**
+    ProseFlow needs two critical permissions to function. When prompted, you must grant them.
+    *   Go to **System Settings > Privacy & Security**.
+    *   Find **Accessibility** in the list. Click it, and then enable the toggle for **ProseFlow**.
+    *   Find **Input Monitoring** in the list. Click it, and then enable the toggle for **ProseFlow**.
+
+*If ProseFlow is not in the list, click the `+` button and add it from your Applications folder.*
 
 ---
 
 ### 📖 How to Use
 
-The core workflow is designed to be fast and intuitive:
+ProseFlow offers multiple ways to process text, designed to be fast and intuitive:
 
-1. **Select Text:** Highlight any text in any application.
-2. **Press Hotkey:** Press your configured Action Menu hotkey (default is `Ctrl+J`).
-3. **Choose an Action:** The floating menu will appear. Use your mouse or arrow keys to select an action and press
-   `Enter`.
-4. **Get Results:**
-    * For quick edits (like "Proofread"), your selected text will be replaced instantly.
-    * For longer content (like "Explain Code"), a result window will appear with the generated text.
+1.  **Hotkey Method (Primary):**
+    *   **Select Text:** Highlight any text in any application.
+    *   **Press Hotkey:** Press your configured Action Menu hotkey (default is `Ctrl+J`).
+    *   **Choose an Action:** The floating menu will appear. Use your mouse or arrow keys to select an action and press `Enter`.
+2.  **Drag-and-Drop Method:**
+    *   **Drag Text:** Select and drag text from any application.
+    *   **Drop on Orb:** Drop the text onto the Floating Action Orb.
+    *   **Choose an Action:** The radial Arc Menu will appear around the orb. Click an action to process the text.
+3.  **Results:**
+    *   For quick edits (like "Proofread"), your selected text will be replaced instantly.
+    *   For longer content (like "Explain Code"), a result window will appear with the generated text.
 
 ---
 
@@ -174,16 +217,16 @@ By open-sourcing the data, we invite developers and researchers to inspect our m
 ProseFlow is built using a modern, layered architecture inspired by **Clean Architecture**, promoting separation of
 concerns, testability, and maintainability.
 
-* **`ProseFlow.Core`**: The domain layer. Contains the core business models, enums, and interfaces for repositories and
-  services. It has zero dependencies on other layers.
-* **`ProseFlow.Application`**: The application layer. It orchestrates the business logic using services, DTOs, and
-  application-specific events. It depends only on `Core`.
-* **`ProseFlow.Infrastructure`**: The infrastructure layer. Contains all implementations of external concerns,
-  including:
-    * **Data Access:** Entity Framework Core with SQLite using the Repository & Unit of Work patterns.
-    * **AI Providers:** Implementations for Cloud (`LlmTornado`) and Local (`LLamaSharp`) providers.
-    * **OS Services:** Cross-platform hotkeys (`SharpHook`), clipboard access, and active window tracking.
-* **`ProseFlow.UI`**: The presentation layer. A cross-platform desktop application built with **Avalonia** and the **ShadUI** component library, following the **MVVM** pattern.
+*   **`ProseFlow.Core`**: The domain layer. Contains the core business models, enums, and interfaces for repositories and
+    services. It has zero dependencies on other layers.
+*   **`ProseFlow.Application`**: The application layer. It orchestrates the business logic using services, DTOs, and
+    application-specific events. It depends only on `Core`.
+*   **`ProseFlow.Infrastructure`**: The infrastructure layer. Contains all implementations of external concerns,
+    including:
+    *   **Data Access:** Entity Framework Core with SQLite using the Repository & Unit of Work patterns.
+    *   **AI Providers:** Implementations for Cloud (`LlmTornado`) and Local (`LLamaSharp`) providers.
+    *   **OS Services:** Cross-platform hotkeys (`SharpHook`), clipboard access, and active window tracking.
+*   **`ProseFlow.UI`**: The presentation layer. A cross-platform desktop application built with **Avalonia** and the **ShadUI** component library, following the **MVVM** pattern.
 
 ---
 
@@ -217,9 +260,9 @@ You can directly support ProseFlow and help transform it into a truly profession
 
 *   **USDT (Tron/TRC20):** Supporting directly by sending to the following USDT wallet address.
 
-	```markdown
+    ```markdown
     TKZzeB71XacY3Av5rnnQVrz2kQqgzrkjFn
-	```
+    ```
 
     **Important:** Please ensure you are sending USDT via the **TRC20 (Tron)** network. Sending funds on any other network may result in their permanent loss.
 
@@ -231,40 +274,41 @@ You can directly support ProseFlow and help transform it into a truly profession
 
 #### Prerequisites
 
-* .NET 8 SDK
-* Git
+*   .NET 8 SDK
+*   Git
 
 #### Steps
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/LSXPrime/ProseFlow.git
-   cd ProseFlow
-   ```
-2. Navigate to the UI project:
-   ```bash
-   cd ProseFlow.UI
-   ```
-3. Run the application:
-   ```bash
-   dotnet run
-   ```
+1.  Clone the repository:
+    ```bash
+    git clone https://github.com/LSXPrime/ProseFlow.git
+    cd ProseFlow
+    ```
+2.  Navigate to the UI project:
+    ```bash
+    cd ProseFlow.UI
+    ```
+3.  Run the application:
+    ```bash
+    dotnet run -f net8.0
+    ```
+    Replace `net8.0` with `net8.0-windows` for Windows, `net8.0-mac` for macOS, or `net8.0` for Linux.
 
 ---
 
 ### 🛠️ Technology Stack
 
-* **UI Framework:** [Avalonia UI](https://avaloniaui.net/)
-* **UI Components:** [ShadUI.Avalonia](https://github.com/shadcn-ui/avalonia)
-* **MVVM Framework:** [CommunityToolkit.Mvvm](https://learn.microsoft.com/en-us/dotnet/communitytoolkit/mvvm/)
-* **Database:** [Entity Framework Core](https://learn.microsoft.com/en-us/ef/core/) with SQLite
-* **Local LLM Engine:** [LLamaSharp](https://github.com/SciSharp/LLamaSharp)
-* **Cloud LLM Library:** [LlmTornado](https://github.com/lofcz/LlmTornado)
-* **Global Hotkeys:** [SharpHook](https://github.com/TolikPylypchuk/SharpHook)
-* **Hardware Monitoring:** [LibreHardwareMonitorLib](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor)
-* **Dependency Injection:** [Microsoft.Extensions.DependencyInjection](https://github.com/dotnet/runtime/tree/main/src/libraries/Microsoft.Extensions.DependencyInjection)
-* **Logging:** [Serilog](https://serilog.net/)
-* **Update:** [Velopack](https://github.com/velopack/velopack)
+*   **UI Framework:** [Avalonia UI](https://avaloniaui.net/)
+*   **UI Components:** [ShadUI.Avalonia](https://github.com/shadcn-ui/avalonia)
+*   **MVVM Framework:** [CommunityToolkit.Mvvm](https://learn.microsoft.com/en-us/dotnet/communitytoolkit/mvvm/)
+*   **Database:** [Entity Framework Core](https://learn.microsoft.com/en-us/ef/core/) with SQLite
+*   **Local LLM Engine:** [LLamaSharp](https://github.com/SciSharp/LLamaSharp)
+*   **Cloud LLM Library:** [LlmTornado](https://github.com/lofcz/LlmTornado)
+*   **Global Hotkeys:** [SharpHook](https://github.com/TolikPylypchuk/SharpHook)
+*   **Hardware Monitoring:** [LibreHardwareMonitorLib](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor)
+*   **Dependency Injection:** [Microsoft.Extensions.DependencyInjection](https://github.com/dotnet/runtime/tree/main/src/libraries/Microsoft.Extensions.DependencyInjection)
+*   **Logging:** [Serilog](https://serilog.net/)
+*   **Update:** [Velopack](https://github.com/velopack/velopack)
 
 ---
 

@@ -49,7 +49,7 @@
                         shadui:ControlAssist.Label="Base URL (Optional)"
                         shadui:ControlAssist.Hint="For custom/self-hosted endpoints"
                         Text="{Binding Config.BaseUrl}"
-                        Watermark="https://api.openai.com/v1" />
+                        Watermark="https://api.openai.com" />
 
                     <TextBox
                         shadui:ControlAssist.Label="Model Name"

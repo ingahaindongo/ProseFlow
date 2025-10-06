@@ -52,11 +52,11 @@
                 <Grid ColumnDefinitions="2*,*" ColumnSpacing="16">
 
                     <!-- Column 0: Tabbed view for Chart and Logs -->
-                    <shadui:Card Grid.Column="0" MinHeight="380">
+                    <shadui:Card Grid.Column="0" MinHeight="380" Name="ChartsCard">
                         <TabControl>
                             <TabItem Header="Usage Chart">
                                 <avalonia:CartesianChart Series="{Binding Series}" XAxes="{Binding XAxes}"
-                                                         YAxes="{Binding YAxes}"
+                                                         YAxes="{Binding YAxes}" Background="{Binding #ChartsCard.Background}"
                                                          Height="300" Margin="12,0,12,12" LegendPosition="Bottom" />
                             </TabItem>
                             <TabItem Header="Model Log">

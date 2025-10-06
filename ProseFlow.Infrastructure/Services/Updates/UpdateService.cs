@@ -1,10 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
-using NuGet.Versioning;
 using ProseFlow.Application.Interfaces;
 using ProseFlow.Core.Enums;
-using ProseFlow.Core.Models;
 using Velopack;
-using Velopack.Locators;
+using Velopack.Exceptions;
 using Velopack.Sources;
 using Action = System.Action;
 
@@ -76,7 +74,7 @@ public class UpdateService : IUpdateService
 
         CurrentStatus = UpdateStatus.Checking;
         _logger.LogInformation("Checking for updates...");
-        
+
         try
         {
             var updateInfo = await _updateManager.CheckForUpdatesAsync();
@@ -93,6 +91,11 @@ public class UpdateService : IUpdateService
                 CurrentStatus = UpdateStatus.Idle;
                 _logger.LogInformation("No updates found. You are running the latest version.");
             }
+        }
+        catch (NotInstalledException)
+        {
+            CurrentStatus = UpdateStatus.Error;
+            _logger.LogWarning("ProseFlow is not installed, likely it's a development build. Updates will be disabled.");
         }
         catch (Exception ex)
         {

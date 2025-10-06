@@ -1,4 +1,5 @@
 ﻿using ProseFlow.Application.DTOs;
+using ProseFlow.Core.Enums;
 using Action = ProseFlow.Core.Models.Action;
 
 namespace ProseFlow.Application.Events;
@@ -27,6 +28,36 @@ public static class AppEvents
     /// </summary>
     public static bool IsResolveConflictsEnabled = true;
 
+    /// <summary>
+    /// Raised when an AI action processing state changes.
+    /// </summary>
+    public static event Action<ActionProcessingState>? ActionProcessingStateChanged;
+
+    public static void OnActionProcessingStarted(ActionProcessingState state) => ActionProcessingStateChanged?.Invoke(state);
+    
+    /// <summary>
+    /// Raised when the main application window's visibility changes (e.g., minimized, hidden, shown).
+    /// The boolean payload is true if the window is visible, and false otherwise.
+    /// </summary>
+    public static event Action<bool>? MainWindowVisibilityChanged;
+    
+    /// <summary>
+    /// Invokes the MainWindowVisibilityChanged event.
+    /// </summary>
+    /// <param name="isVisible">True if the main window is now visible; otherwise, false.</param>
+    public static void OnMainWindowVisibilityChanged(bool isVisible) => MainWindowVisibilityChanged?.Invoke(isVisible);
+
+    /// <summary>
+    /// Raised just before the Floating Action Menu is shown or closed.
+    /// Useful for hiding other UI elements, like the floating button.
+    /// </summary>
+    public static event Action<bool>? FloatingMenuStateChanged;
+    
+    /// <summary>
+    /// Invokes the FloatingMenuStateChanged event.
+    /// </summary>
+    public static void OnFloatingMenuStateChanged(bool isOpen) => FloatingMenuStateChanged?.Invoke(isOpen);
+    
     /// <summary>
     /// Raised when the Action Orchestration Service needs the UI to display the Floating Action Menu.
     /// The UI layer subscribes to this, shows the menu, and returns the user's selection.

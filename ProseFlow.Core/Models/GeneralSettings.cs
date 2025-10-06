@@ -29,6 +29,16 @@ public class GeneralSettings : EntityBase
     public bool LaunchAtLogin { get; set; }
 
     /// <summary>
+    /// If true, the application will start minimized to the system tray.
+    /// </summary>
+    public bool StartMinimized { get; set; }
+
+    /// <summary>
+    /// If true, a persistent floating button will be displayed on screen as an alternative to the hotkey.
+    /// </summary>
+    public bool IsFloatingButtonHidden { get; set; }
+
+    /// <summary>
     /// The application's visual theme ("System", "Light", or "Dark").
     /// </summary>
     public string Theme { get; set; } = nameof(ThemeType.System);
@@ -37,4 +47,14 @@ public class GeneralSettings : EntityBase
     /// Flag indicating whether the user has completed the first-run onboarding.
     /// </summary>
     public bool IsOnboardingCompleted { get; set; }
+    
+    /// <summary>
+    /// The user's preferred mode for handling remote workspace updates.
+    /// </summary>
+    public WorkspaceSyncMode WorkspaceSyncMode { get; set; } = WorkspaceSyncMode.Manual;
+    
+    /// <summary>
+    /// The user's preferred strategy for resolving conflicts when pulling actions from a workspace.
+    /// </summary>
+    public ActionConflictResolutionStrategy WorkspaceSyncConflictStrategy { get; set; } = ActionConflictResolutionStrategy.Overwrite;
 }

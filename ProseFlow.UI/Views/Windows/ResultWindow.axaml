@@ -73,10 +73,10 @@
         <ScrollViewer Padding="16">
             <StackPanel Spacing="16" Margin="16">
                 <!-- Main Result Content -->
-                <StackPanel>
-                    <TextBlock Classes="h4" Text="Result" Margin="0,0,0,8" />
+                <StackPanel Spacing="8">
+                    <TextBlock Classes="h4" Text="Result" />
                     <md:MarkdownScrollViewer
-                        SelectionEnabled="True"
+                        SelectionEnabled="True" Margin="8"
                         Markdown="{Binding MainContent}" />
                 </StackPanel>
 

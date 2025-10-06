@@ -1,4 +1,5 @@
 ﻿using ProseFlow.Core.Abstracts;
+using ProseFlow.Core.Enums;
 
 namespace ProseFlow.Core.Models;
 
@@ -26,17 +27,28 @@ public class Action : EntityBase
     /// The resource path or identifier for the action's icon.
     /// </summary>
     public string Icon { get; set; } = "avares://ProseFlow/Assets/Icons/default.svg";
-
+    
     /// <summary>
-    /// If true, the result will be displayed in a dedicated window by default.
-    /// If false, it will attempt an in-place replacement.
+    /// The desired output mode for the result (e.g., InPlace, Windowed, Diff).
+    /// The default is <see cref="OutputMode.InPlace"/>.
     /// </summary>
-    public bool OpenInWindow { get; set; }
+    /// <remarks>
+    /// This property specifies how the AI's response will be displayed to the user.
+    /// - <see cref="OutputMode.InPlace"/>: The AI's response will replace the selected text.
+    /// - <see cref="OutputMode.Windowed"/>: The AI's response will be displayed in a new window.
+    /// - <see cref="OutputMode.Diff"/>: The AI's response will be displayed in a diff view window.
+    /// </remarks>
+    public OutputMode OutputMode { get; set; } = OutputMode.InPlace;
 
     /// <summary>
     /// If true, the prompt will be augmented to ask the AI to explain its changes.
     /// </summary>
     public bool ExplainChanges { get; set; }
+    
+    /// <summary>
+    /// If true, this action will be prioritized in UIs like the Arc Menu.
+    /// </summary>
+    public bool IsFavorite { get; set; }
 
     /// <summary>
     /// A list of application process names where this action should be prioritized or exclusively shown.

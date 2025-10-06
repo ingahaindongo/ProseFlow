@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using ProseFlow.Application.DTOs;
 using ProseFlow.Application.DTOs.Models;
 using ProseFlow.UI.Models;
+using ProseFlow.UI.ViewModels.Dialogs;
 using Action = ProseFlow.Core.Models.Action;
 
 namespace ProseFlow.UI.Services;
@@ -19,6 +20,13 @@ public interface IDialogService
     /// <param name="filterExtensions">The file extensions for the filter (e.g., "*.json").</param>
     /// <returns>The path to the selected file, or null if cancelled.</returns>
     Task<string?> ShowOpenFileDialogAsync(string title, string filterName, params string[] filterExtensions);
+
+    /// <summary>
+    /// Opens a dialog to select a folder.
+    /// </summary>
+    /// <param name="title">The title of the dialog window.</param>
+    /// <returns>The path to the selected folder, or null if cancelled.</returns>
+    Task<string?> ShowOpenFolderDialogAsync(string title);
     
     /// <summary>
     /// Opens a URL, file, or folder in the default associated application.
@@ -62,8 +70,25 @@ public interface IDialogService
     /// <param name="onConfirm">The asynchronous action to perform if the user confirms.</param>
     /// <param name="onCancel">The asynchronous action to perform if the user cancels.</param>
     /// <returns>True if the user confirmed; otherwise, false.</returns>
-    void ShowConfirmationDialogAsync(string title, string message, Func<Task>? onConfirm = null, Func<Task>? onCancel = null);
+    void ShowConfirmationDialogAsync(string title, string message, Func<Task>? onConfirm, Func<Task>? onCancel = null);
     
+    /// <summary>
+    /// Shows a confirmation message dialog with asynchronous actions.
+    /// </summary>
+    /// <param name="title">The title of the dialog.</param>
+    /// <param name="message">The message to display to the user.</param>
+    /// <returns>True if the user confirmed; otherwise, false.</returns>
+    Task<bool> ShowConfirmationDialogAsync(string title, string message);
+    
+    /// <summary>
+    /// Shows a confirmation dialog that is explicitly owned by another window, ensuring it appears on top.
+    /// </summary>
+    /// <param name="owner">The window that will own this dialog.</param>
+    /// <param name="title">The title of the confirmation dialog.</param>
+    /// <param name="message">The message to display to the user.</param>
+    /// <returns>A task that resolves to true if confirmed, and false otherwise.</returns>
+    Task<bool> ShowOwnedConfirmationDialogAsync(Window owner, string title, string message);
+
     /// <summary>
     /// Shows a dialog to get a single string input from the user.
     /// </summary>
@@ -73,7 +98,6 @@ public interface IDialogService
     /// <param name="initialValue">An optional initial value for the input box.</param>
     /// <returns>A result object indicating success and the entered text.</returns>
     Task<InputDialogResult> ShowInputDialogAsync(string title, string message, string confirmButtonText, string? initialValue = null);
-    
     
     /// <summary>
     /// Shows a model library dialog with the given model library view model.
@@ -109,4 +133,23 @@ public interface IDialogService
     /// <param name="cancelText">The text for the cancellation (negative) button.</param>
     /// <returns>A task that resolves to `true` if the user confirmed, and `false` otherwise.</returns>
     Task<bool> ShowCriticalConfirmationDialogAsync(Window owner, string title, string message, string confirmText, string cancelText);
+
+    /// <summary>
+    /// Shows the dialog for managing the workspace connection.
+    /// </summary>
+    /// <returns>True if changes were applied; otherwise, false.</returns>
+    Task<bool> ShowManageConnectionDialogAsync();
+
+    /// <summary>
+    /// Shows the dialog for creating or entering a workspace password.
+    /// </summary>
+    /// <param name="mode">Whether to show the create or enter password UI.</param>
+    /// <returns>A result object indicating success and the entered password.</returns>
+    Task<WorkspacePasswordResult> ShowWorkspacePasswordDialogAsync(WorkspacePasswordMode mode);
+
+    /// <summary>
+    /// Shows the dialog for syncing with the workspace.
+    /// </summary>
+    /// <returns>True if a sync operation was performed; otherwise, false.</returns>
+    Task<bool> ShowSyncDialogAsync();
 }

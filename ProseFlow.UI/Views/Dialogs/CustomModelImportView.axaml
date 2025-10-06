@@ -8,7 +8,7 @@
     x:DataType="vm:CustomModelImportViewModel"
 
     Title="Import Custom GGUF Model"
-    Width="550" Height="500"
+    Width="550" Height="500" WindowState="Normal"
     WindowStartupLocation="CenterOwner" CanResize="False" ShowInTaskbar="False"
     IsTitleBarVisible="False" SystemDecorations="None" Background="Transparent"
     ShowBottomBorder="False" BorderBrush="Transparent" BorderThickness="0">
@@ -23,12 +23,12 @@
                 <TextBox
                     shadui:ControlAssist.Label="Model Name"
                     Text="{Binding ModelName}"
-                    Watermark="e.g., Solar 10.7B Instruct" />
+                    Watermark="e.g., Qwen3 4B Instruct" />
 
                 <TextBox
                     shadui:ControlAssist.Label="Creator / Author"
                     Text="{Binding Creator}"
-                    Watermark="e.g., Upstage" />
+                    Watermark="e.g., Qwen" />
 
                 <TextBox
                     shadui:ControlAssist.Height="80"

@@ -12,7 +12,6 @@
     x:DataType="vm:ActionsViewModel">
 
     <UserControl.Resources>
-        <c:BoolToOutputTargetConverter x:Key="BoolToOutputTargetConverter" />
         <c:StringToIconConverter x:Key="StringToIconConverter" />
 
         <!-- Group Header -->
@@ -117,83 +116,108 @@
                 </StackPanel>
 
                 <!-- Groups and Actions List -->
-                <DataGrid
-                    b:AdvancedDataGridDropBehavior.Command="{Binding ReorderCommand}"
-                    ItemsSource="{Binding GroupedActions}"
-                    AutoGenerateColumns="False" CanUserReorderColumns="False" CanUserResizeColumns="True"
-                    CanUserSortColumns="False" GridLinesVisibility="Horizontal" IsReadOnly="True"
-                    HeadersVisibility="Column"
-                    RowGroupTheme="{StaticResource ActionGroupHeaderTheme}">
+                <Panel>
+                    <!-- Empty State Message -->
+                    <StackPanel Spacing="16" Margin="0,100" HorizontalAlignment="Stretch" VerticalAlignment="Center" IsVisible="{Binding !HasActions}">
+                        <icons:SymbolIcon Symbol="Workflow" Size="64" HorizontalAlignment="Center" />
+                        <TextBlock Classes="h4 Muted" Text="No Actions Created Yet" HorizontalAlignment="Center"/>
+                        <TextBlock Classes="p Muted" HorizontalAlignment="Center" VerticalAlignment="Stretch" Text="Click 'New Action' to create your first command, or import a starter pack in Settings." />
+                    </StackPanel>
+                    
+                    <DataGrid
+                        IsVisible="{Binding HasActions}"
+                        b:AdvancedDataGridDropBehavior.Command="{Binding ReorderCommand}"
+                        ItemsSource="{Binding GroupedActions}"
+                        AutoGenerateColumns="False" CanUserReorderColumns="False" CanUserResizeColumns="True"
+                        CanUserSortColumns="False" GridLinesVisibility="Horizontal" IsReadOnly="True"
+                        HeadersVisibility="Column"
+                        RowGroupTheme="{StaticResource ActionGroupHeaderTheme}">
 
-                    <DataGrid.Columns>
-                        <!-- Drag Handle Column -->
-                        <DataGridTemplateColumn Width="40">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <icons:SymbolIcon Size="18" Symbol="MoveVertical"
-                                                ToolTip.Tip="Drag and drop to reorder actions." />
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-
-                        <!-- Name Column (with Icon) -->
-                        <DataGridTemplateColumn Width="*" Header="Name">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate DataType="core:Action">
-                                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                        <PathIcon Width="16" Height="16" Foreground="{x:Null}"
-                                                  Data="{Binding Icon, Converter={StaticResource StringToIconConverter}}">
-                                            <PathIcon.Styles>
-                                                <Style Selector="Path">
-                                                    <Setter Property="Stroke" Value="{DynamicResource PrimaryColor}" />
-                                                    <Setter Property="StrokeThickness" Value="1" />
-                                                </Style>
-                                            </PathIcon.Styles>
-                                        </PathIcon>
-                                        <TextBlock Text="{Binding Name}" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-
-                        <!-- Default Output Column -->
-                        <DataGridTextColumn Width="150"
-                                            Binding="{Binding OpenInWindow, Converter={StaticResource BoolToOutputTargetConverter}, DataType=core:Action}"
-                                            Header="Default Output" />
-
-                        <!-- Actions Column (with Dropdown) -->
-                        <DataGridTemplateColumn Width="Auto" Header="Options">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <shadui:SimpleDropdown HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                           Classes="Ghost" PopupPlacement="BottomEdgeAlignedLeft"
-                                                           PopupWidth="150">
-                                        <shadui:SimpleDropdown.TriggerContent>
-                                            <icons:SymbolIcon Size="16" Symbol="Command" />
-                                        </shadui:SimpleDropdown.TriggerContent>
-                                        <Button
-                                            Command="{Binding $parent[UserControl].((vm:ActionsViewModel)DataContext).EditActionCommand, FallbackValue={x:Null}}"
-                                            CommandParameter="{Binding .}">
-                                            <shadui:ButtonAssist.Icon>
-                                                <icons:SymbolIcon Size="18" Symbol="Pen" />
-                                            </shadui:ButtonAssist.Icon>
-                                            Edit
+                        <DataGrid.Columns>
+                            <!-- Favorite Column -->
+                            <DataGridTemplateColumn Width="40">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate DataType="core:Action">
+                                        <Button Classes="Ghost" Width="40"
+                                                Command="{Binding $parent[UserControl].((vm:ActionsViewModel)DataContext).ToggleFavoriteCommand, FallbackValue={x:Null}}"
+                                                CommandParameter="{Binding .}"
+                                                ToolTip.Tip="Toggle Favorite">
+                                            <icons:SymbolIcon Size="18"
+                                                              Symbol="{Binding IsFavorite, Converter={StaticResource ConditionCheckConverter}, ConverterParameter='true|Star|StarOff'}" />
                                         </Button>
-                                        <Separator />
-                                        <Button Classes="Destructive"
-                                                Command="{Binding $parent[UserControl].((vm:ActionsViewModel)DataContext).DeleteActionCommand, FallbackValue={x:Null}}"
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            
+                            <!-- Drag Handle Column -->
+                            <DataGridTemplateColumn Width="40">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <icons:SymbolIcon Size="18" Symbol="MoveVertical"
+                                                    ToolTip.Tip="Drag and drop to reorder actions." />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Name Column (with Icon) -->
+                            <DataGridTemplateColumn Width="*" Header="Name">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate DataType="core:Action">
+                                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                            <PathIcon Width="16" Height="16" Foreground="{x:Null}"
+                                                      Data="{Binding Icon, Converter={StaticResource StringToIconConverter}}">
+                                                <PathIcon.Styles>
+                                                    <Style Selector="Path">
+                                                        <Setter Property="Stroke" Value="{DynamicResource PrimaryColor}" />
+                                                        <Setter Property="StrokeThickness" Value="1" />
+                                                    </Style>
+                                                </PathIcon.Styles>
+                                            </PathIcon>
+                                            <TextBlock Text="{Binding Name}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Default Output Column -->
+                            <DataGridTextColumn Width="150"
+                                                Binding="{Binding OutputMode, DataType=core:Action}"
+                                                Header="Default Output" />
+
+                            <!-- Actions Column (with Dropdown) -->
+                            <DataGridTemplateColumn Width="Auto" Header="Options">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <shadui:SimpleDropdown HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                               Classes="Ghost" PopupPlacement="BottomEdgeAlignedLeft"
+                                                               PopupWidth="150">
+                                            <shadui:SimpleDropdown.TriggerContent>
+                                                <icons:SymbolIcon Size="16" Symbol="Command" />
+                                            </shadui:SimpleDropdown.TriggerContent>
+                                            <Button
+                                                Command="{Binding $parent[UserControl].((vm:ActionsViewModel)DataContext).EditActionCommand, FallbackValue={x:Null}}"
                                                 CommandParameter="{Binding .}">
-                                            <shadui:ButtonAssist.Icon>
-                                                <icons:SymbolIcon Size="18" Symbol="Trash2" />
-                                            </shadui:ButtonAssist.Icon>
-                                            Delete
-                                        </Button>
-                                    </shadui:SimpleDropdown>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                    </DataGrid.Columns>
-                </DataGrid>
+                                                <shadui:ButtonAssist.Icon>
+                                                    <icons:SymbolIcon Size="18" Symbol="Pen" />
+                                                </shadui:ButtonAssist.Icon>
+                                                Edit
+                                            </Button>
+                                            <Separator />
+                                            <Button Classes="Destructive"
+                                                    Command="{Binding $parent[UserControl].((vm:ActionsViewModel)DataContext).DeleteActionCommand, FallbackValue={x:Null}}"
+                                                    CommandParameter="{Binding .}">
+                                                <shadui:ButtonAssist.Icon>
+                                                    <icons:SymbolIcon Size="18" Symbol="Trash2" />
+                                                </shadui:ButtonAssist.Icon>
+                                                Delete
+                                            </Button>
+                                        </shadui:SimpleDropdown>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Panel>
             </StackPanel>
         </ScrollViewer>
     </DockPanel>

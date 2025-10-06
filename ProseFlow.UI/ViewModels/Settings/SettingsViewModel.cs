@@ -7,13 +7,14 @@ using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ProseFlow.Application.DTOs;
-using ProseFlow.UI.Utils;
 using ProseFlow.Application.Events;
 using ProseFlow.Application.Interfaces;
 using ProseFlow.Application.Services;
 using ProseFlow.Core.Enums;
 using ProseFlow.Core.Interfaces.Os;
 using ProseFlow.Core.Models;
+using ProseFlow.UI.Services;
+using ProseFlow.UI.Utils;
 using Action = ProseFlow.Core.Models.Action;
 
 namespace ProseFlow.UI.ViewModels.Settings;
@@ -37,6 +38,9 @@ public partial class SettingsViewModel : ViewModelBase, IDisposable
     private readonly ISystemService _systemService;
     private readonly IHotkeyService _hotkeyService;
     private readonly IHotkeyRecordingService _recordingService;
+    private readonly IWorkspaceManager _workspaceManager;
+    private readonly IDialogService _dialogService;
+    private readonly FloatingOrbService _floatingOrbService;
 
     private const string RecordingPrompt = "Press a key combination...";
 
@@ -63,12 +67,17 @@ public partial class SettingsViewModel : ViewModelBase, IDisposable
     public ObservableCollection<Action> AvailableActions { get; } = [];
     public ObservableCollection<PresetViewModel> AvailablePresets { get; } = [];
     public List<string> AvailableThemes => Enum.GetNames(typeof(ThemeType)).ToList();
+    public List<WorkspaceSyncMode> AvailableSyncModes => Enum.GetValues<WorkspaceSyncMode>().ToList();
+    public List<ActionConflictResolutionStrategy> AvailableSyncConflictStrategies => Enum.GetValues<ActionConflictResolutionStrategy>().ToList();
     
     [ObservableProperty]
     private Action? _selectedSmartPasteAction;
     
     [ObservableProperty]
     private string _selectedTheme = nameof(ThemeType.System);
+
+    [ObservableProperty] private bool _isWorkspaceConnected;
+    [ObservableProperty] private string? _workspacePath;
     
     public SettingsViewModel(
         SettingsService settingsService, 
@@ -76,7 +85,10 @@ public partial class SettingsViewModel : ViewModelBase, IDisposable
         IPresetService presetService,
         ISystemService systemService,
         IHotkeyService hotkeyService,
-        IHotkeyRecordingService recordingService)
+        IHotkeyRecordingService recordingService,
+        IWorkspaceManager workspaceManager,
+        IDialogService dialogService,
+        FloatingOrbService floatingOrbService)
     {
         _settingsService = settingsService;
         _actionService = actionService;
@@ -84,11 +96,21 @@ public partial class SettingsViewModel : ViewModelBase, IDisposable
         _systemService = systemService;
         _hotkeyService = hotkeyService;
         _recordingService = recordingService;
-        
+        _workspaceManager = workspaceManager;
+        _dialogService = dialogService;
+        _floatingOrbService = floatingOrbService;
+
         _recordingService.HotkeyDetected += OnHotkeyDetected;
         _recordingService.RecordingStateUpdated += OnRecordingStateUpdated;
+        _workspaceManager.StateChanged += OnWorkspaceStateChanged;
     }
 
+    private void OnWorkspaceStateChanged()
+    {
+        IsWorkspaceConnected = _workspaceManager.IsConnected;
+        WorkspacePath = _workspaceManager.CurrentState.SharedPath;
+    }
+    
     partial void OnSettingsChanged(GeneralSettings? value)
     {
         if (value is null) return;
@@ -124,6 +146,7 @@ public partial class SettingsViewModel : ViewModelBase, IDisposable
         await LoadSettingsAsync();
         await LoadActionsAsync();
         await LoadPresetsAsync();
+        OnWorkspaceStateChanged();
     }
     
     private async Task LoadSettingsAsync()
@@ -180,6 +203,14 @@ public partial class SettingsViewModel : ViewModelBase, IDisposable
             AppEvents.RequestNotification($"Failed to import '{presetVm.Preset.Name}'.", NotificationType.Error);
         }
     }
+
+    [RelayCommand]
+    private async Task ManageConnectionAsync()
+    {
+        var changed = await _dialogService.ShowManageConnectionDialogAsync();
+        if (changed)
+            await OnNavigatedToAsync(); // If connection changed, reload all data that might be affected
+    }
     
     [RelayCommand]
     private async Task SaveAsync()
@@ -197,6 +228,7 @@ public partial class SettingsViewModel : ViewModelBase, IDisposable
 
         _systemService.SetLaunchAtLogin(Settings.LaunchAtLogin);
         _hotkeyService.UpdateHotkeys(Settings.ActionMenuHotkey, Settings.SmartPasteHotkey);
+        _floatingOrbService.SetEnabled(!Settings.IsFloatingButtonHidden);
         await _settingsService.SaveGeneralSettingsAsync(Settings);
         AppEvents.RequestNotification("Settings saved successfully.", NotificationType.Success);
     }
@@ -286,6 +318,7 @@ public partial class SettingsViewModel : ViewModelBase, IDisposable
     {
         _recordingService.HotkeyDetected -= OnHotkeyDetected;
         _recordingService.RecordingStateUpdated -= OnRecordingStateUpdated;
+        _workspaceManager.StateChanged -= OnWorkspaceStateChanged;
         GC.SuppressFinalize(this);
     }
 }

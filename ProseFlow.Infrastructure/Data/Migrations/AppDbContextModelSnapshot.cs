@@ -46,11 +46,14 @@ namespace ProseFlow.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsFavorite")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("OpenInWindow")
+                    b.Property<int>("OutputMode")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Prefix")
@@ -161,6 +164,9 @@ namespace ProseFlow.Infrastructure.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsFloatingButtonHidden")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("IsOnboardingCompleted")
                         .HasColumnType("INTEGER");
 
@@ -174,12 +180,21 @@ namespace ProseFlow.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("StartMinimized")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Theme")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset?>("UpdatedAtUtc")
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("WorkspaceSyncConflictStrategy")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("WorkspaceSyncMode")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -191,10 +206,14 @@ namespace ProseFlow.Infrastructure.Data.Migrations
                             Id = 1,
                             ActionMenuHotkey = "Ctrl+J",
                             CreatedAtUtc = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsFloatingButtonHidden = false,
                             IsOnboardingCompleted = false,
                             LaunchAtLogin = false,
                             SmartPasteHotkey = "Ctrl+Shift+V",
-                            Theme = "System"
+                            StartMinimized = false,
+                            Theme = "System",
+                            WorkspaceSyncConflictStrategy = 0,
+                            WorkspaceSyncMode = 0
                         });
                 });
 
@@ -308,9 +327,15 @@ namespace ProseFlow.Infrastructure.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("EnableFlashAttention")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("FallbackServiceType")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("GpuDeviceIndex")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("LocalCpuCores")
                         .HasColumnType("INTEGER");
@@ -362,7 +387,9 @@ namespace ProseFlow.Infrastructure.Data.Migrations
                         {
                             Id = 1,
                             CreatedAtUtc = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            EnableFlashAttention = true,
                             FallbackServiceType = "None",
+                            GpuDeviceIndex = -1,
                             LocalCpuCores = 4,
                             LocalModelAutoUnloadEnabled = true,
                             LocalModelContextSize = 4096,

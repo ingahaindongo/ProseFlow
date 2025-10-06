@@ -2,7 +2,7 @@
 using ProseFlow.Application.Interfaces;
 using SharpHook.Data;
 
-namespace ProseFlow.Infrastructure.Services.Os;
+namespace ProseFlow.Infrastructure.Services.Os.Hotkeys;
 
 /// <summary>
 /// Implements the service that mediates hotkey recording.

@@ -46,11 +46,30 @@ public class HistoryService(IServiceScopeFactory scopeFactory)
     }
 
     /// <summary>
-    /// Retrieves all history entries, ordered by the most recent.
+    /// Retrieves all history entries, ordered by the most recent, with optional filtering and searching.
     /// </summary>
-    public Task<List<HistoryEntry>> GetHistoryAsync()
+    /// <param name="searchTerm">The text to search for within the history entries.</param>
+    /// <param name="filterType">The property to search within (e.g., "Action Name", "Input"). Defaults to all relevant fields.</param>
+    public Task<List<HistoryEntry>> GetHistoryAsync(string? searchTerm = null, string? filterType = null)
     {
-        return ExecuteQueryAsync(unitOfWork => unitOfWork.History.GetAllOrderedByTimestampAsync());
+        return ExecuteQueryAsync(unitOfWork => unitOfWork.History.GetAllOrderedByTimestampAsync(searchTerm, filterType));
+    }
+    
+    /// <summary>
+    /// Deletes a history entry by ID.
+    /// </summary>
+    /// <param name="entry">The history entry to delete.</param>
+    /// <returns>A task representing the asynchronous deletion operation.</returns>
+    /// <remarks>
+    /// If the given history entry does not exist, this method does nothing.
+    /// </remarks>
+    public Task DeleteHistoryEntryAsync(HistoryEntry entry)
+    {
+        return ExecuteCommandAsync(async unitOfWork =>
+        {
+            var historyEntry = await unitOfWork.History.GetByIdAsync(entry.Id);
+            if (historyEntry is not null) unitOfWork.History.Delete(historyEntry);
+        });
     }
 
     /// <summary>

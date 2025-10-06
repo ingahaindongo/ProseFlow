@@ -28,6 +28,8 @@ public partial class ActionsViewModel(
     [ObservableProperty]
     private DataGridCollectionView? _groupedActions;
 
+    public bool HasActions => _allActions.Any();
+
     public override async Task OnNavigatedToAsync()
     {
         await LoadDataAsync();
@@ -53,6 +55,7 @@ public partial class ActionsViewModel(
         collectionView.GroupDescriptions.Add(new DataGridPathGroupDescription("ActionGroup.Name"));
         
         GroupedActions = collectionView;
+        OnPropertyChanged(nameof(HasActions));
     }
 
     [RelayCommand]
@@ -142,6 +145,22 @@ public partial class ActionsViewModel(
                 await actionService.DeleteActionGroupAsync(group.Id);
                 await LoadDataAsync();
             });
+    }
+    
+    [RelayCommand]
+    private async Task ToggleFavoriteAsync(Action? action)
+    {
+        if (action is null) return;
+        
+        await actionService.ToggleFavoriteAsync(action.Id);
+        
+        // Find the in-memory instance and update it to reflect the change immediately in the UI
+        var actionInList = _allActions.FirstOrDefault(a => a.Id == action.Id);
+        if (actionInList is not null)
+        {
+            actionInList.IsFavorite = !actionInList.IsFavorite;
+            GroupedActions?.Refresh();
+        }
     }
 
     [RelayCommand]

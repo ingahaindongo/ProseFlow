@@ -1,7 +1,7 @@
-﻿using SharpHook.Data;
-using ProseFlow.Application.DTOs;
+﻿using ProseFlow.Application.DTOs;
+using SharpHook.Data;
 
-namespace ProseFlow.Infrastructure.Services.Os;
+namespace ProseFlow.Infrastructure.Services.Os.Hotkeys;
 
 /// <summary>
 /// Provides utility methods to convert between SharpHook's hotkey data types and user-friendly strings.

@@ -1,0 +1,58 @@
+﻿<shadui:Window
+    Title="ProseFlow"
+    x:Class="ProseFlow.UI.Views.Windows.SplashScreenWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:shadui="clr-namespace:ShadUI;assembly=ShadUI"
+    xmlns:vm="using:ProseFlow.UI.ViewModels.Windows"
+    xmlns:icons="clr-namespace:ProseFlow.UI.Controls.Icons"
+    x:DataType="vm:SplashScreenViewModel"
+
+    Width="600" Height="250"
+    SystemDecorations="None"
+    CanResize="False"
+    WindowStartupLocation="CenterScreen"
+    IsTitleBarVisible="False"
+    ExtendClientAreaToDecorationsHint="False"
+    Background="Transparent"
+    ShowBottomBorder="False"
+    BorderBrush="Transparent"
+    BorderThickness="0"
+    ShowInTaskbar="False"
+    Topmost="True">
+
+    <shadui:Card Padding="24" CornerRadius="8">
+        <StackPanel Spacing="16" VerticalAlignment="Center" HorizontalAlignment="Center">
+            <!-- Logo -->
+            <PathIcon
+                Width="48" Height="48"
+                Data="{Binding Converter={StaticResource StringToIconConverter}, ConverterParameter=Logo}">
+                <PathIcon.Styles>
+                    <Style Selector="Path">
+                        <Setter Property="Stroke" Value="{DynamicResource SecondaryColor}" />
+                        <Setter Property="StrokeThickness" Value="1" />
+                    </Style>
+                </PathIcon.Styles>
+            </PathIcon>
+
+            <!-- Title -->
+            <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                <TextBlock Classes="h2" Text="Prose"  FontFamily="{StaticResource JetbrainsFont}" />
+                <TextBlock Classes="h2" Text="Flow" FontFamily="{StaticResource JetbrainsFont}" />
+            </StackPanel>
+            
+            <Separator />
+            
+            <!-- Status Message -->
+            <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                <icons:SymbolIcon Symbol="Loader" Size="16" VerticalAlignment="Center" />
+                <TextBlock
+                    Text="{Binding StatusMessage}"
+                    Classes="Small Muted"
+                    HorizontalAlignment="Center" />
+            </StackPanel>
+
+
+        </StackPanel>
+    </shadui:Card>
+</shadui:Window>

@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 using ProseFlow.UI.Utils;
 using ProseFlow.Application.Events;
 using ProseFlow.Application.Services;
+using ProseFlow.Core.Enums;
 using ProseFlow.Core.Models;
 using Action = ProseFlow.Core.Models.Action;
 
@@ -26,7 +27,7 @@ public partial class ActionEditorViewModel(Action action, ActionManagementServic
         Prefix = action.Prefix,
         Instruction = action.Instruction,
         Icon = action.Icon,
-        OpenInWindow = action.OpenInWindow,
+        OutputMode = action.OutputMode,
         ExplainChanges = action.ExplainChanges,
         ApplicationContext = [..action.ApplicationContext],
         SortOrder = action.SortOrder,
@@ -45,6 +46,7 @@ public partial class ActionEditorViewModel(Action action, ActionManagementServic
     [ObservableProperty]
     private string _selectedIcon = string.Empty;
 
+    public List<OutputMode> OutputModes { get; } = Enum.GetValues<OutputMode>().Where(o => o != OutputMode.Default).ToList();
     public List<IconSymbol> LucideIcons { get; } = Enum.GetValues<IconSymbol>().ToList();
     
     public ObservableCollection<ActionGroup> AvailableGroups { get; } = [];
@@ -65,7 +67,7 @@ public partial class ActionEditorViewModel(Action action, ActionManagementServic
             SelectedIcon = kind.ToString();
             SelectedIconTab = 0; // "Built-in" tab
         }
-        else
+        else if (!string.IsNullOrEmpty(Action.Icon))
         {
             SelectedLucideIcon = IconSymbol.Workflow;
             SelectedIcon = Action.Icon;

@@ -15,10 +15,10 @@ public class OverviewCard : TemplatedControl
         set => SetValue(TitleProperty, value);
     }
 
-    public static readonly StyledProperty<string> ValueProperty =
-        AvaloniaProperty.Register<OverviewCard, string>(nameof(Value));
+    public static readonly StyledProperty<object?> ValueProperty =
+        AvaloniaProperty.Register<OverviewCard, object?>(nameof(Value));
 
-    public string Value
+    public object? Value
     {
         get => GetValue(ValueProperty);
         set => SetValue(ValueProperty, value);

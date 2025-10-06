@@ -2,11 +2,11 @@
     x:Class="ProseFlow.UI.Views.Windows.FloatingActionMenuWindow"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:c="using:ProseFlow.UI.Converters"
     xmlns:shadui="clr-namespace:ShadUI;assembly=ShadUI"
     xmlns:vm="using:ProseFlow.UI.ViewModels.Windows"
     xmlns:actions="clr-namespace:ProseFlow.UI.ViewModels.Actions"
     xmlns:icons="clr-namespace:ProseFlow.UI.Controls.Icons"
+    xmlns:converters="clr-namespace:Avalonia.Data.Converters;assembly=Avalonia.Base"
     x:DataType="vm:FloatingActionMenuViewModel"
 
     Width="500" SizeToContent="Height"
@@ -20,10 +20,6 @@
     ShowActivated="True"
 
     Opened="OnWindowOpened" KeyDown="OnWindowKeyDown" Deactivated="WindowBase_OnDeactivated">
-
-    <Window.Resources>
-        <c:StringToIconConverter x:Key="StringToIconConverter" />
-    </Window.Resources>
 
     <Window.Styles>
         <Style Selector="Button.ResultContainer.Default icons|SymbolIcon, Button.ResultContainer.Windowed icons|SymbolIcon">
@@ -100,7 +96,8 @@
                     <Button
                         HorizontalAlignment="Right"
                         Classes="Ghost"
-                        Command="{Binding OpenSettingsCommand}"
+                        Command="{Binding NavigateToPageCommand}"
+                        CommandParameter="Providers"
                         ToolTip.Tip="Open Settings">
                         <shadui:ButtonAssist.Icon>
                             <icons:SymbolIcon Size="18" Symbol="Settings" />
@@ -127,10 +124,9 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="actions:ActionGroupViewModel">
-                                <StackPanel Margin="0,4">
+                                <StackPanel Name="ActionGroup" Margin="0,4">
                                     <!-- Group Header -->
                                     <Border
-                                        Name="GroupHeader"
                                         Padding="8,8,8,4"
                                         Margin="0,2"
                                         CornerRadius="{DynamicResource MdCornerRadius}"
@@ -155,9 +151,14 @@
                                                        VerticalAlignment="Center" />
 
                                             <!-- Group Name -->
-                                            <TextBlock Text="{Binding Name}" Classes="Small Muted"
-                                                       FontWeight="SemiBold"
-                                                       Margin="4,0,0,0" VerticalAlignment="Center" />
+                                            <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                                <icons:SymbolIcon Symbol="Star" Size="12" Classes="Muted"
+                                                                  IsVisible="{Binding IsFavoritesGroup}"
+                                                                  VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding Name}" Classes="Small Muted"
+                                                           FontWeight="SemiBold"
+                                                           Margin="4,0,0,0" VerticalAlignment="Center" />
+                                            </StackPanel>
                                         </DockPanel>
                                     </Border>
 
@@ -220,10 +221,20 @@
                                                             </PathIcon.Styles>
                                                         </PathIcon>
 
-                                                        <TextBlock
-                                                            Grid.Column="2"
-                                                            VerticalAlignment="Center"
-                                                            Text="{Binding Action.Name}" />
+                                                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4"
+                                                                    VerticalAlignment="Center">
+                                                            <icons:SymbolIcon Symbol="Star" Size="12" VerticalAlignment="Center">
+                                                                <icons:SymbolIcon.IsVisible>
+                                                                    <MultiBinding Converter="{x:Static converters:BoolConverters.And}">
+                                                                        <Binding Path="Action.IsFavorite" />
+                                                                        <Binding Path="#ActionGroup.((actions:ActionGroupViewModel)DataContext).Name" 
+                                                                                Converter="{x:Static ObjectConverters.Equal}"
+                                                                                ConverterParameter="Search Results" />
+                                                                    </MultiBinding>
+                                                                </icons:SymbolIcon.IsVisible>
+                                                            </icons:SymbolIcon>
+                                                            <TextBlock VerticalAlignment="Center" Text="{Binding Action.Name}" />
+                                                        </StackPanel>
                                                     </Grid>
                                                 </Button>
                                             </DataTemplate>
@@ -234,6 +245,19 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </ScrollViewer>
+                
+                <!-- Empty State Message -->
+                <StackPanel Spacing="16" VerticalAlignment="Center" Margin="32">
+                    <StackPanel.IsVisible>
+                        <MultiBinding Converter="{x:Static converters:BoolConverters.And}">
+                            <Binding Path="!IsCustomInstructionActive" />
+                            <Binding Path="HasNoActions" />
+                        </MultiBinding>
+                    </StackPanel.IsVisible>
+                    <icons:SymbolIcon Symbol="SearchX" Size="32" HorizontalAlignment="Center" Classes="Muted"/>
+                    <TextBlock Classes="p Muted" TextAlignment="Center" TextWrapping="Wrap" Text="No actions available for this application."/>
+                    <Button Classes="Outline" Content="Manage Actions" HorizontalAlignment="Center" Command="{Binding NavigateToPageCommand}" CommandParameter="Actions"/>
+                </StackPanel>
 
                 <!-- Custom Instruction Text Box -->
                 <StackPanel Margin="16" Spacing="8" IsVisible="{Binding IsCustomInstructionActive}">

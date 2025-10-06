@@ -1,0 +1,213 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:ProseFlow.UI.Controls"
+        xmlns:icons="clr-namespace:ProseFlow.UI.Controls.Icons">
+    <Design.PreviewWith>
+        <Window Background="Transparent" Width="64" Height="64" SizeToContent="WidthAndHeight" SystemDecorations="None"
+                CanResize="False">
+            <controls:FloatingOrb />
+        </Window>
+    </Design.PreviewWith>
+
+    <Style Selector="controls|FloatingOrb">
+        <Setter Property="RenderTransform">
+            <TranslateTransform />
+        </Setter>
+        <Setter Property="Width" Value="64" />
+        <Setter Property="Height" Value="64" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid>
+                    <!-- Animated Glow Effect -->
+                    <Border Name="GlowBorder"
+                            Width="56" Height="56"
+                            Opacity="0"
+                            CornerRadius="36"
+                            RenderTransformOrigin="50%,50%"
+                            IsHitTestVisible="False">
+                        <Border.Transitions>
+                            <Transitions>
+                                <DoubleTransition Property="Opacity" Duration="0:0:0.3" Easing="CubicEaseOut"/>
+                                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" Easing="CubicEaseOut" />
+                            </Transitions>
+                        </Border.Transitions>
+                        <Border.Background>
+                            <RadialGradientBrush Center="50%,50%" GradientOrigin="50%,50%" RadiusX="0.5" RadiusY="0.5">
+                                <GradientStop Color="Transparent" Offset="1" />
+                                <GradientStop Color="Purple" Offset="0" />
+                            </RadialGradientBrush>
+                        </Border.Background>
+                    </Border>
+
+                    <!-- Main Orb Body -->
+                    <Border Name="OrbBorder"
+                            Background="#1E1E1E" Opacity="0.85"
+                            Margin="6"
+                            BorderThickness="1" BorderBrush="White"
+                            CornerRadius="36">
+                        <Border.Transitions>
+                            <Transitions>
+                                <DoubleTransition Property="Opacity" Duration="0:0:0.2" Easing="CubicEaseOut" />
+                                <BrushTransition Property="BorderBrush" Duration="0:0:0.2" />
+                            </Transitions>
+                        </Border.Transitions>
+                    </Border>
+
+                    <!-- Swirling energy spinner -->
+                    <PathIcon Name="ProcessingSpinner" Width="32" Height="32" Opacity="0" IsVisible="False"
+                              Data="M 16,4 A 12,12 0 1 1 4,16"
+                              Foreground="{x:Null}">
+                        <PathIcon.RenderTransform>
+                            <RotateTransform />
+                        </PathIcon.RenderTransform>
+                        <PathIcon.Styles>
+                            <Style Selector="Path">
+                                <Setter Property="Stroke" Value="{DynamicResource PrimaryColor}" />
+                                <Setter Property="StrokeThickness" Value="2.5" />
+                                <Setter Property="StrokeLineCap" Value="Round" />
+                            </Style>
+                        </PathIcon.Styles>
+                    </PathIcon>
+
+                    <!-- Icon Container (Logo, Check, X) -->
+                    <Viewbox Name="IconViewbox" Width="28" Height="28" RenderTransformOrigin="50%,50%">
+                        <Viewbox.RenderTransform>
+                            <ScaleTransform />
+                        </Viewbox.RenderTransform>
+                        <icons:SymbolIcon Name="IconPath"
+                                  Size="24"
+                                  Symbol="Logo">
+                            <icons:SymbolIcon.Transitions>
+                                <Transitions>
+                                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.3" Easing="BackEaseOut" />
+                                </Transitions>
+                            </icons:SymbolIcon.Transitions>
+                        </icons:SymbolIcon>
+                    </Viewbox>
+                    
+                    <!-- Action Count Badge -->
+                    <Border Width="22" Height="22" CornerRadius="11"
+                            Background="{DynamicResource SecondaryColor}"
+                            VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,4,4,0"
+                            IsVisible="{TemplateBinding IsBadgeVisible}">
+                        <Border.Transitions>
+                            <Transitions>
+                                <DoubleTransition Property="Opacity" Duration="0:0:0.3" Easing="CubicEaseOut"/>
+                            </Transitions>
+                        </Border.Transitions>
+                        <TextBlock Text="{TemplateBinding ActionCount}"
+                                   Foreground="White"
+                                   FontSize="12" FontWeight="Bold"
+                                   VerticalAlignment="Center" HorizontalAlignment="Center" />
+                    </Border>
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+    <!-- State: Idle (Slow Pulsing Glow) -->
+    <Style Selector="controls|FloatingOrb[State=Idle] /template/ Border#GlowBorder">
+        <Setter Property="Opacity" Value="0.4" />
+        <Style.Animations>
+            <Animation Duration="0:0:2.5" IterationCount="Infinite" PlaybackDirection="Alternate" Easing="CubicEaseInOut">
+                <!-- KeyFrame for the "Dim" state of the glow -->
+                <KeyFrame Cue="0%">
+                    <Setter Property="Background">
+                        <RadialGradientBrush Center="50%,50%" GradientOrigin="50%,50%" RadiusX="0.5" RadiusY="0.5">
+                            <GradientStop Color="Transparent" Offset="1" />
+                            <!-- Use a more transparent/darker purple -->
+                            <GradientStop Color="#44800080" Offset="0" /> 
+                        </RadialGradientBrush>
+                    </Setter>
+                </KeyFrame>
+                <!-- KeyFrame for the "Bright" state of the glow -->
+                <KeyFrame Cue="100%">
+                    <Setter Property="Background">
+                        <RadialGradientBrush Center="50%,50%" GradientOrigin="50%,50%" RadiusX="0.5" RadiusY="0.5">
+                            <GradientStop Color="Transparent" Offset="1" />
+                            <!-- Use a more opaque/brighter purple -->
+                            <GradientStop Color="#88A020F0" Offset="0" />
+                        </RadialGradientBrush>
+                    </Setter>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <!-- State: Hover (Intensified Glow & Opaque Body) -->
+    <Style Selector="controls|FloatingOrb:pointerover /template/ Border#OrbBorder">
+        <Setter Property="Opacity" Value="1.0" />
+    </Style>
+    <Style Selector="controls|FloatingOrb[State=Idle]:pointerover /template/ Border#GlowBorder">
+        <Setter Property="Opacity" Value="1" />
+        <Setter Property="RenderTransform">
+            <ScaleTransform ScaleX="1.1" ScaleY="1.1" />
+        </Setter>
+    </Style>
+
+    <!-- State: Processing (Swirling Energy) -->
+    <Style Selector="controls|FloatingOrb[State=Processing] /template/ Viewbox#IconViewbox">
+        <Setter Property="Opacity" Value="0" />
+    </Style>
+    <Style Selector="controls|FloatingOrb[State=Processing] /template/ PathIcon#ProcessingSpinner">
+        <Setter Property="Opacity" Value="1" />
+        <Setter Property="IsVisible" Value="True" />
+        <Style.Animations>
+            <Animation Duration="0:0:1.0" IterationCount="Infinite" Easing="LinearEasing">
+                <KeyFrame Cue="0%">
+                    <Setter Property="(RotateTransform.Angle)" Value="0" />
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="(RotateTransform.Angle)" Value="360" />
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <!-- State: Success (Green Flash, Checkmark, Pop) -->
+    <Style Selector="controls|FloatingOrb[State=Success] /template/ icons|SymbolIcon#IconPath">
+        <Setter Property="Symbol" Value="Check" />
+    </Style>
+    <Style Selector="controls|FloatingOrb[State=Success] /template/ Viewbox#IconViewbox">
+        <Setter Property="(ScaleTransform.ScaleX)" Value="1.2" />
+        <Setter Property="(ScaleTransform.ScaleY)" Value="1.2" />
+    </Style>
+    <Style Selector="controls|FloatingOrb[State=Success] /template/ Border#OrbBorder">
+        <Setter Property="BorderBrush" Value="LimeGreen" />
+    </Style>
+
+    <!-- State: Error (Red Flash, X, Shake) -->
+    <Style Selector="controls|FloatingOrb[State=Error] /template/ icons|SymbolIcon#IconPath">
+        <Setter Property="Symbol" Value="X" />
+    </Style>
+    <Style Selector="controls|FloatingOrb[State=Error] /template/ Border#OrbBorder">
+        <Setter Property="BorderBrush" Value="Red" />
+    </Style>
+    <Style Selector="controls|FloatingOrb[State=Error]">
+        <Style.Animations>
+            <Animation Duration="0:0:0.5" IterationCount="1">
+                <KeyFrame Cue="0%">
+                    <Setter Property="(TranslateTransform.X)" Value="0" />
+                </KeyFrame>
+                <KeyFrame Cue="10%">
+                    <Setter Property="(TranslateTransform.X)" Value="-5" />
+                </KeyFrame>
+                <KeyFrame Cue="30%">
+                    <Setter Property="(TranslateTransform.X)" Value="5" />
+                </KeyFrame>
+                <KeyFrame Cue="50%">
+                    <Setter Property="(TranslateTransform.X)" Value="-5" />
+                </KeyFrame>
+                <KeyFrame Cue="70%">
+                    <Setter Property="(TranslateTransform.X)" Value="5" />
+                </KeyFrame>
+                <KeyFrame Cue="90%">
+                    <Setter Property="(TranslateTransform.X)" Value="-5" />
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="(TranslateTransform.X)" Value="0" />
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+</Styles>

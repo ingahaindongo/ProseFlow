@@ -37,10 +37,11 @@ public partial class StringToIconConverter : IValueConverter
         if (parameter is not null && parameter.ToString() == "Logo")
             return ParseFromFile(IconPath);
         
-        var inputString = value as string;
+        var inputString = parameter as string ?? value as string;
 
         // Handle direct binding of IconSymbol for convenience (e.g., in previews)
         if (value is IconSymbol directKind) inputString = directKind.ToString();
+        if (parameter is IconSymbol directKind2) inputString = directKind2.ToString();
 
         if (string.IsNullOrWhiteSpace(inputString))
             return GetDefaultIcon();

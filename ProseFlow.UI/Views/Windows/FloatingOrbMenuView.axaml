@@ -1,0 +1,50 @@
+﻿<shadui:Window x:Class="ProseFlow.UI.Views.Windows.FloatingOrbMenuView"
+               xmlns="https://github.com/avaloniaui"
+               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+               xmlns:shadui="clr-namespace:ShadUI;assembly=ShadUI"
+               xmlns:vm="using:ProseFlow.UI.ViewModels.Windows"
+               xmlns:icons="clr-namespace:ProseFlow.UI.Controls.Icons"
+               x:DataType="vm:FloatingOrbMenuViewModel"
+               SizeToContent="WidthAndHeight" Width="200" Height="90"
+               SystemDecorations="None" CanResize="False" ShowInTaskbar="False" Topmost="True"
+               WindowStartupLocation="Manual"
+               IsTitleBarVisible="False" Background="Transparent" ShowBottomBorder="False"
+               BorderBrush="Transparent" BorderThickness="0" ShowActivated="True" Focusable="True"
+               Deactivated="OnDeactivated">
+    <shadui:Card Padding="4" Width="200">
+        <StackPanel>
+            
+            <Button Classes="Ghost" HorizontalContentAlignment="Left" Command="{Binding OpenApplicationCommand}">
+                <shadui:ButtonAssist.Icon>
+                    <PathIcon
+                        Name="IconPath"
+                        Width="16" Height="16"
+                        Foreground="{x:Null}"
+                        Data="{Binding ., Converter={StaticResource StringToIconConverter}, ConverterParameter=Logo}">
+                        <PathIcon.Styles>
+                            <Style Selector="Path">
+                                <Setter Property="Stroke" Value="White" />
+                                <Setter Property="StrokeThickness" Value="1" />
+                            </Style>
+                        </PathIcon.Styles>
+                    </PathIcon>
+                </shadui:ButtonAssist.Icon>
+                Open ProseFlow
+            </Button>
+            <Separator/>
+            <Button Classes="Ghost Destructive" HorizontalContentAlignment="Left" Command="{Binding QuitApplicationCommand}">
+                <shadui:ButtonAssist.Icon>
+                    <icons:SymbolIcon Symbol="LogOut" Size="16"/>
+                </shadui:ButtonAssist.Icon>
+                Quit ProseFlow
+            </Button>
+            <Separator/>
+            <Button Classes="Ghost" HorizontalContentAlignment="Left" Command="{Binding CloseOrbCommand}">
+                <shadui:ButtonAssist.Icon>
+                    <icons:SymbolIcon Symbol="X" Size="16"/>
+                </shadui:ButtonAssist.Icon>
+                Close Orb
+            </Button>
+        </StackPanel>
+    </shadui:Card>
+</shadui:Window>

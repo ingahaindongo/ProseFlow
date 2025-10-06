@@ -28,6 +28,7 @@ public partial class FloatingActionMenuViewModel : ViewModelBase
     [ObservableProperty] private bool _isCustomInstructionActive;
 
     public bool ShouldClose { get; private set; }
+    public bool HasNoActions { get; }
 
     public ObservableCollection<ActionGroupViewModel> ActionGroups { get; } = [];
 
@@ -37,7 +38,7 @@ public partial class FloatingActionMenuViewModel : ViewModelBase
         _allAvailableActions = availableActions.ToList();
         _activeAppContext = activeAppContext;
         CurrentServiceTypeName = providerSettings.PrimaryServiceType;
-        
+        HasNoActions = _allAvailableActions.Count == 0;
         FilterAndGroupActions();
     }
 
@@ -85,6 +86,7 @@ public partial class FloatingActionMenuViewModel : ViewModelBase
         {
             var searchResults = _allAvailableActions
                 .Where(a => a.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(a => a.IsFavorite)
                 .Select(a => new ActionItemViewModel(a)).ToList();
     
             if (searchResults.Count != 0)
@@ -96,27 +98,50 @@ public partial class FloatingActionMenuViewModel : ViewModelBase
         }
         else
         {
-            // Otherwise, group by the actual ActionGroup
-            var groupedActions = _allAvailableActions
+            var favoriteActions = _allAvailableActions.Where(a => a.IsFavorite).ToList();
+            var nonFavoriteActions = _allAvailableActions.Where(a => !a.IsFavorite).ToList();
+
+            // Create and add the Favorites group if it has any actions
+            if (favoriteActions.Count > 0)
+            {
+                var favoritesGroup = new ActionGroupViewModel("Favorites")
+                {
+                    IsExpanded = true,
+                    IsFavoritesGroup = true
+                };
+                
+                foreach (var action in favoriteActions.OrderBy(a => a.SortOrder))
+                {
+                    favoritesGroup.Actions.Add(new ActionItemViewModel(action) { IsContextual = IsActionContextual(action) });
+                }
+                ActionGroups.Add(favoritesGroup);
+            }
+
+            // Group the remaining actions by their actual ActionGroup
+            var groupedActions = nonFavoriteActions
                 .GroupBy(a => a.ActionGroup)
                 .OrderBy(g => g.Key?.SortOrder ?? int.MaxValue);
-    
+
             foreach (var group in groupedActions)
             {
                 var groupName = group.Key?.Name ?? "Uncategorized";
                 var actionGroupVm = new ActionGroupViewModel(groupName);
-    
+
                 foreach (var action in group.OrderBy(a => a.SortOrder))
                 {
-                    var isContextual = action.ApplicationContext.Count > 0 &&
-                                       action.ApplicationContext.Any(a => a.Contains(_activeAppContext, StringComparison.OrdinalIgnoreCase));
-                    actionGroupVm.Actions.Add(new ActionItemViewModel(action) { IsContextual = isContextual });
+                    actionGroupVm.Actions.Add(new ActionItemViewModel(action) { IsContextual = IsActionContextual(action) });
                 }
                 ActionGroups.Add(actionGroupVm);
             }
         }
     
         SelectedItem = GetFlatListOfVisibleItems().FirstOrDefault();
+    }
+
+    private bool IsActionContextual(Action action)
+    {
+        return action.ApplicationContext.Count > 0 &&
+               action.ApplicationContext.Any(a => a.Contains(_activeAppContext, StringComparison.OrdinalIgnoreCase));
     }
 
     private List<object> GetFlatListOfVisibleItems()
@@ -149,7 +174,7 @@ public partial class FloatingActionMenuViewModel : ViewModelBase
             {
                 Name = "Custom Instruction",
                 Instruction = CustomInstruction,
-                OpenInWindow = mode == OutputMode.Windowed,
+                OutputMode = mode,
                 ExplainChanges = false,
                 Prefix = string.Empty,
                 Icon = "Sparkles"
@@ -263,7 +288,7 @@ public partial class FloatingActionMenuViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void OpenSettings()
+    private void NavigateToPage(string pageTitle)
     {
         var mainWindow =
             Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop
@@ -275,7 +300,7 @@ public partial class FloatingActionMenuViewModel : ViewModelBase
             mainWindow.Show();
             mainWindow.Activate();
             mainWindowViewModel.Navigate(
-                mainWindowViewModel.PageViewModels.FirstOrDefault(x => x.Title == "Providers"));
+                mainWindowViewModel.PageViewModels.FirstOrDefault(x => x.Title == pageTitle));
         }
 
         CancelSelection();

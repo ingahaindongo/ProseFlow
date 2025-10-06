@@ -8,7 +8,6 @@
     xmlns:vm="using:ProseFlow.UI.ViewModels"
     xmlns:models="clr-namespace:ProseFlow.Core.Models;assembly=ProseFlow.Core"
     xmlns:downloads="clr-namespace:ProseFlow.UI.Views.Downloads"
-    xmlns:about="clr-namespace:ProseFlow.UI.ViewModels.About"
     xmlns:icons="clr-namespace:ProseFlow.UI.Controls.Icons"
     x:DataType="vm:MainViewModel"
     mc:Ignorable="d"
@@ -41,6 +40,18 @@
             <Setter Property="BorderBrush" Value="{DynamicResource PrimaryColor}" />
             <Setter Property="BorderThickness" Value="3,0,0,0" />
             <Setter Property="Background" Value="{DynamicResource GhostColor}" />
+        </Style>
+        
+        <Style Selector="Border.NotificationDot">
+            <Setter Property="Width" Value="8" />
+            <Setter Property="Height" Value="8" />
+            <Setter Property="Background" Value="{DynamicResource DestructiveColor}" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="BorderBrush" Value="{DynamicResource DestructiveColor}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="HorizontalAlignment" Value="Right" />
+            <Setter Property="Margin" Value="0,0,0,0" />
         </Style>
     </Window.Styles>
 
@@ -151,7 +162,6 @@
 
                                 <shadui:SidebarItem.Icon>
                                     <Viewbox>
-                                        
                                         <PathIcon Width="20" Height="20" Foreground="{x:Null}"
                                                   Data="{Binding Icon, Converter={StaticResource StringToIconConverter}}">
                                             <PathIcon.Styles>
@@ -176,6 +186,18 @@
                                    HorizontalAlignment="Center"
                                    IsVisible="{Binding #Toggler.IsChecked}" />
 
+                        <!-- Sync Button -->
+                        <Button Name="SyncButton"
+                                HorizontalAlignment="Left" Padding="8,0" Margin="14,0,0,0"
+                                IsVisible="{Binding IsWorkspaceConnected}"
+                                Command="{Binding SyncWorkspaceCommand}"
+                                ToolTip.Tip="Sync with Workspace">
+                            <Grid>
+                                <icons:SymbolIcon Size="18" Symbol="RefreshCw" />
+                                <Border Classes="NotificationDot" IsVisible="{Binding AreWorkspaceUpdatesAvailable}"/>
+                            </Grid>
+                        </Button>
+                        
                         <!-- Downloads Button/Popup -->
                         <Button Name="DownloadsButton"
                                 HorizontalAlignment="Left"
@@ -213,7 +235,11 @@
             <!-- Main Content Area with smooth transitions -->
             <TransitioningContentControl
                 Grid.Column="1"
-                Content="{Binding CurrentPage}" />
+                Content="{Binding CurrentPage}" >
+                <TransitioningContentControl.PageTransition>
+                    <PageSlide Orientation="Horizontal" Duration="0:00:00.500" />
+                </TransitioningContentControl.PageTransition>
+            </TransitioningContentControl>
         </Grid>
 
         <!-- Toast Notification Host -->

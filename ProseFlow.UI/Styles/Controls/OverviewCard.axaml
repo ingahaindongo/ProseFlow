@@ -1,7 +1,8 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="using:ProseFlow.UI.Controls.Dashboard"
-        xmlns:shadUi="clr-namespace:ShadUI;assembly=ShadUI">
+        xmlns:shadUi="clr-namespace:ShadUI;assembly=ShadUI"
+        xmlns:b="using:ProseFlow.UI.Behaviors">
     <Style Selector="controls|OverviewCard">
         <Setter Property="Template">
             <ControlTemplate>
@@ -11,13 +12,15 @@
                             <!-- Column 0: Name, Value, and Hint -->
                             <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
                                 <TextBlock Classes="Small" Text="{TemplateBinding Title}" />
-                                <TextBlock Classes="h3" Text="{TemplateBinding Value}" />
+                                <TextBlock Classes="h3"
+                                           b:AnimatingTextBlockBehavior.AnimatedValue="{TemplateBinding Value}">
+                                </TextBlock>
                                 <TextBlock Classes="Caption Muted" Text="{TemplateBinding Hint}" />
                             </StackPanel>
 
                             <!-- Column 1: Icon -->
-                            <Viewbox Grid.Column="1" 
-                                     MaxWidth="48" 
+                            <Viewbox Grid.Column="1"
+                                     MaxWidth="48"
                                      MaxHeight="48"
                                      HorizontalAlignment="Center"
                                      VerticalAlignment="Center">
@@ -31,7 +34,7 @@
                                     </PathIcon.Styles>
                                 </PathIcon>
                             </Viewbox>
-                            
+
                         </Grid>
                     </shadUi:Card.Content>
                 </shadUi:Card>

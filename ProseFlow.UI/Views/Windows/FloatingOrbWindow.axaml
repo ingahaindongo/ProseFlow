@@ -1,0 +1,32 @@
+﻿<shadui:Window
+    x:Class="ProseFlow.UI.Views.Windows.FloatingOrbWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:shadui="clr-namespace:ShadUI;assembly=ShadUI"
+    xmlns:vm="using:ProseFlow.UI.ViewModels.Windows"
+    xmlns:controls="using:ProseFlow.UI.Controls"
+    x:DataType="vm:FloatingOrbViewModel"
+    Title="ProseFlow Orb"
+    Width="64" Height="64"
+    SizeToContent="WidthAndHeight"
+    ExtendClientAreaToDecorationsHint="False"
+    SystemDecorations="None"
+    IsTitleBarVisible="False"
+    BorderBrush="Transparent"
+    BorderThickness="0"
+    ShowBottomBorder="False"
+    Background="Transparent"
+    CanResize="False"
+    ShowTitlebarBackground="False"
+    ShowInTaskbar="False"
+    Topmost="True"
+    ClipToBounds="False"
+    Focusable="False"
+    PointerPressed="OnPointerPressed"
+    PointerMoved="OnPointerMoved"
+    PointerReleased="OnPointerReleased"
+    Opened="OnWindowOpened">
+
+    <controls:FloatingOrb State="{Binding State}" ActionCount="{Binding ActiveActionCount}" IsBadgeVisible="{Binding IsBadgeVisible}" ClipToBounds="False" />
+
+</shadui:Window>

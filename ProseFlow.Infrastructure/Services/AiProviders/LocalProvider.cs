@@ -104,7 +104,7 @@ public class LocalProvider(
                 stopwatch.Start();
                 for (var i = 0; i < maxTokensToGenerate; i++)
                 {
-                    if (cancellationToken.IsCancellationRequested) break;
+                    cancellationToken.ThrowIfCancellationRequested();
 
                     if (conversation.RequiresInference)
                         await executor.Infer(cancellationToken);
@@ -158,7 +158,7 @@ public class LocalProvider(
                     Path.GetFileNameWithoutExtension(settings.LocalModelPath),
                     averageTps);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 logger.LogError(ex, "Local inference failed.");
                 throw;

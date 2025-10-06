@@ -2,10 +2,12 @@
 using System.Timers;
 using LibreHardwareMonitor.Hardware;
 using Microsoft.Extensions.Logging;
+using ProseFlow.Application.Events;
 using ProseFlow.Core.Models;
 using Timer = System.Timers.Timer;
 
 namespace ProseFlow.Infrastructure.Services.Monitoring;
+
 
 /// <summary>
 /// A singleton service that polls for system hardware metrics in the background.
@@ -55,7 +57,9 @@ public class HardwareMonitoringService : IDisposable
 
             _timer = new Timer(2000); // Poll every 2 seconds
             _timer.Elapsed += OnTimerElapsed;
-            _timer.Start();
+            
+            // Subscribe to visibility changes to control the timer.
+            AppEvents.MainWindowVisibilityChanged += OnMainWindowVisibilityChanged;
         }
         catch (Exception ex)
         {
@@ -66,6 +70,57 @@ public class HardwareMonitoringService : IDisposable
                 _logger.LogWarning("Hardware monitoring service failed to initialize on macOS ARM64 architecture. This is likely due to a missing OSX-ARM64 version of MonoPosixHelper library.");
             else
                 _logger.LogWarning(ex, "Hardware monitoring service failed to initialize, likely due to a missing native dependency for this OS/architecture. Hardware metrics will be unavailable.");
+        }
+    }
+
+    /// <summary>
+    /// Enumerates all detectable GPU devices in the system.
+    /// </summary>
+    /// <returns>A list of GpuDevice objects.</returns>
+    public List<GpuDeviceInfo> GetGpuDevices()
+    {
+        var devices = new List<GpuDeviceInfo>();
+
+        if (!IsMonitoringAvailable) return devices;
+
+        var gpus = _computer.Hardware
+            .Where(h => h.HardwareType is HardwareType.GpuNvidia or HardwareType.GpuAmd or HardwareType.GpuIntel)
+            .ToList();
+
+        devices.AddRange(gpus.Select((t, i) => new GpuDeviceInfo
+        {
+            Index = i,
+            Name = t.Name,
+            VramGb = Math.Round((t.Sensors.FirstOrDefault(s => s.Name == GpuMemoryTotalSensorName && s.SensorType == SensorType.SmallData)?.Value ?? 0) / 1024.0, 1),
+            Type = t.HardwareType switch
+            {
+                HardwareType.GpuNvidia => "NVIDIA",
+                HardwareType.GpuAmd => "AMD",
+                HardwareType.GpuIntel => "Intel",
+                _ => "Unknown"
+            }
+        }));
+
+        return devices;
+    }
+
+    /// <summary>
+    /// Starts or stops the hardware polling based on the main window's visibility.
+    /// </summary>
+    private void OnMainWindowVisibilityChanged(bool isVisible)
+    {
+        if (_timer is null) return;
+
+        switch (isVisible)
+        {
+            case true when !_timer.Enabled:
+                _logger.LogInformation("Main window is visible, starting hardware polling.");
+                _timer.Start();
+                break;
+            case false when _timer.Enabled:
+                _logger.LogInformation("Main window is hidden, stopping hardware polling to conserve resources.");
+                _timer.Stop();
+                break;
         }
     }
 
@@ -183,6 +238,7 @@ public class HardwareMonitoringService : IDisposable
 
     public void Dispose()
     {
+        AppEvents.MainWindowVisibilityChanged -= OnMainWindowVisibilityChanged;
         _timer?.Stop();
         _timer?.Dispose();
         if (_isMonitoringAvailable) _computer.Close();

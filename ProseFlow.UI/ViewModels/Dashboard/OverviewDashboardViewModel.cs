@@ -11,12 +11,30 @@ using CommunityToolkit.Mvvm.Input;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
+using ProseFlow.Application.DTOs;
+using ProseFlow.Application.Interfaces;
 using ProseFlow.Application.Services;
 using ProseFlow.Core.Models;
 using ProseFlow.Infrastructure.Services.AiProviders.Local;
+using ProseFlow.UI.Services.Logging;
 using SkiaSharp;
+using Timer = System.Timers.Timer;
 
 namespace ProseFlow.UI.ViewModels.Dashboard;
+
+public partial class TrackedActionViewModel(TrackedAction action) : ObservableObject
+{
+    public TrackedAction Action { get; } = action;
+
+    [ObservableProperty]
+    private string _elapsedTime = "0s";
+
+    public void UpdateElapsedTime()
+    {
+        var elapsed = DateTime.UtcNow - Action.StartTime;
+        ElapsedTime = elapsed.TotalMinutes >= 1 ? $"{elapsed.Minutes}m {elapsed.Seconds}s" : $"{elapsed.Seconds}s";
+    }
+}
 
 public partial class OverviewDashboardViewModel : DashboardViewModelBase, IDisposable
 {
@@ -26,11 +44,13 @@ public partial class OverviewDashboardViewModel : DashboardViewModelBase, IDispo
     private readonly HistoryService _historyService;
     private readonly LocalModelManagerService _modelManager;
     private readonly SettingsService _settingsService;
+    private readonly ApplicationLogCollectorService _logCollectorService;
+    private readonly IBackgroundActionTrackerService _trackerService;
+    private readonly Timer _elapsedTimeTimer;
 
     // KPI Properties
     [ObservableProperty] private int _totalActionsExecuted;
-    [ObservableProperty] private long _totalCloudTokens;
-    [ObservableProperty] private long _totalLocalTokens;
+    [ObservableProperty] private long _totalTokens;
 
     // Status Widget Properties
     [ObservableProperty] private ModelStatus _localModelStatus;
@@ -39,20 +59,72 @@ public partial class OverviewDashboardViewModel : DashboardViewModelBase, IDispo
 
     // Recent Activity
     public ObservableCollection<HistoryEntry> RecentActivity { get; } = [];
+    
+    // Active Processes
+    public ObservableCollection<TrackedActionViewModel> ActiveActions { get; } = [];
+    
+    // Application Log Console
+    public ObservableCollection<LogEntry> ApplicationLogs { get; } = [];
 
     public OverviewDashboardViewModel(
         DashboardService dashboardService,
         HistoryService historyService,
         LocalModelManagerService modelManager,
-        SettingsService settingsService)
+        SettingsService settingsService,
+        ApplicationLogCollectorService logCollectorService,
+        IBackgroundActionTrackerService trackerService)
     {
         _dashboardService = dashboardService;
         _historyService = historyService;
         _modelManager = modelManager;
         _settingsService = settingsService;
+        _logCollectorService = logCollectorService;
+        _trackerService = trackerService;
+        
+        // Initialize the collection and subscribe to events for live updates
+        foreach (var action in _trackerService.GetActiveActions())
+        {
+            ActiveActions.Add(new TrackedActionViewModel(action));
+        }
+        _trackerService.ActionAdded += OnActionAdded;
+        _trackerService.ActionRemoved += OnActionRemoved;
 
         _modelManager.StateChanged += OnModelStateChanged;
+        _logCollectorService.LogMessageReceived += OnApplicationLogMessageReceived;
+        
         OnModelStateChanged(); // Set initial state
+        foreach (var log in _logCollectorService.GetLogHistory()) ApplicationLogs.Add(log);
+        
+        // Timer to update elapsed time for active actions
+        _elapsedTimeTimer = new Timer(1000);
+        _elapsedTimeTimer.Elapsed += (_, _) => UpdateElapsedTimes();
+        _elapsedTimeTimer.AutoReset = true;
+        _elapsedTimeTimer.Start();
+    }
+    
+    private void OnActionAdded(TrackedAction action)
+    {
+        Dispatcher.UIThread.Post(() => ActiveActions.Add(new TrackedActionViewModel(action)));
+    }
+    
+    private void OnActionRemoved(TrackedAction action)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            var actionToRemove = ActiveActions.FirstOrDefault(a => a.Action.Id == action.Id);
+            if (actionToRemove != null)
+            {
+                ActiveActions.Remove(actionToRemove);
+            }
+        });
+    }
+    
+    private void UpdateElapsedTimes()
+    {
+        foreach (var vm in ActiveActions)
+        {
+            vm.UpdateElapsedTime();
+        }
     }
 
     protected override async Task LoadDataAsync()
@@ -71,10 +143,7 @@ public partial class OverviewDashboardViewModel : DashboardViewModelBase, IDispo
 
         // Update KPIs
         TotalActionsExecuted = allHistory.Count;
-        TotalCloudTokens = allHistory.Where(h => h.ProviderUsed == "Cloud")
-            .Sum(h => h.PromptTokens + h.CompletionTokens);
-        TotalLocalTokens = allHistory.Where(h => h.ProviderUsed == "Local")
-            .Sum(h => h.PromptTokens + h.CompletionTokens);
+        TotalTokens = allHistory.Sum(h => h.PromptTokens + h.CompletionTokens);
 
         // Update Recent Activity
         RecentActivity.Clear();
@@ -145,6 +214,16 @@ public partial class OverviewDashboardViewModel : DashboardViewModelBase, IDispo
         });
     }
 
+    private void OnApplicationLogMessageReceived(LogEntry logEntry)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            ApplicationLogs.Add(logEntry);
+            // Trim the collection to prevent UI performance degradation
+            if (ApplicationLogs.Count > 500) ApplicationLogs.RemoveAt(0);
+        });
+    }
+
     [RelayCommand]
     private async Task ToggleLocalModel()
     {
@@ -158,10 +237,21 @@ public partial class OverviewDashboardViewModel : DashboardViewModelBase, IDispo
             await _modelManager.LoadModelAsync(settings);
         }
     }
+    
+    [RelayCommand]
+    private void CancelAction(Guid id)
+    {
+        _trackerService.RequestCancellation(id);
+    }
 
     public void Dispose()
     {
+        _elapsedTimeTimer.Stop();
+        _elapsedTimeTimer.Dispose();
         _modelManager.StateChanged -= OnModelStateChanged;
+        _logCollectorService.LogMessageReceived -= OnApplicationLogMessageReceived;
+        _trackerService.ActionAdded -= OnActionAdded;
+        _trackerService.ActionRemoved -= OnActionRemoved;
         GC.SuppressFinalize(this);
     }
 }

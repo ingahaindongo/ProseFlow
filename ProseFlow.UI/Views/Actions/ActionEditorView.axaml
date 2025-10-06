@@ -11,9 +11,9 @@
     Width="600" Height="700"
     Margin="125"
     WindowStartupLocation="CenterOwner"
+    WindowState="Normal"
     CanResize="False"
     ShowInTaskbar="False"
-    SaveWindowState="True"
     IsTitleBarVisible="False"
     Background="Transparent"
     ShowBottomBorder="False"
@@ -62,7 +62,21 @@
                                 <ComboBox IsEnabled="{Binding SelectedIconTab, Converter={StaticResource ConditionCheckConverter}, ConverterParameter='0|True|False'}"
                                     Grid.Column="0"
                                     ItemsSource="{Binding LucideIcons}"
-                                    SelectedItem="{Binding SelectedLucideIcon}" />
+                                    SelectedItem="{Binding SelectedLucideIcon}">
+                                    <ComboBox.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <VirtualizingStackPanel />
+                                        </ItemsPanelTemplate>
+                                    </ComboBox.ItemsPanel>
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <icons:SymbolIcon Symbol="{Binding .}" />
+                                                <TextBlock Classes="Small" Text="{Binding .}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
                                 <Border Grid.Column="1" Width="36" Height="36"
                                         BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"
                                         CornerRadius="{DynamicResource MdCornerRadius}">
@@ -110,10 +124,12 @@
                     Watermark="e.g., Code.exe, chrome.exe" />
 
                 <Separator />
-
-                <ToggleSwitch IsChecked="{Binding Action.OpenInWindow}" Margin="10,0,0,0">
-                    Show result in a new window by default
-                </ToggleSwitch>
+                
+                <ComboBox 
+                    shadui:ControlAssist.Label="Output Mode"
+                    ItemsSource="{Binding OutputModes}"
+                    PlaceholderText="Select an output mode (e.g., Replace, Diff, etc.)..."
+                    SelectedItem="{Binding Action.OutputMode}" />
 
                 <ToggleSwitch IsChecked="{Binding Action.ExplainChanges}" Margin="10,0,0,0">
                     Ask AI to explain changes (may increase token usage)

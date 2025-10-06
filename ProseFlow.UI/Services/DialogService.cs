@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Layout;
@@ -11,13 +12,16 @@ using Microsoft.Extensions.DependencyInjection;
 using ProseFlow.Application.DTOs;
 using ProseFlow.Application.DTOs.Models;
 using ProseFlow.Application.Services;
+using ProseFlow.Core.Enums;
 using ProseFlow.UI.Models;
 using ProseFlow.UI.ViewModels.Actions;
 using ProseFlow.UI.ViewModels.Dialogs;
 using ProseFlow.UI.ViewModels.Downloads;
 using ProseFlow.UI.ViewModels.Providers;
+using ProseFlow.UI.ViewModels.Windows;
 using ProseFlow.UI.Views.Actions;
 using ProseFlow.UI.Views.Dialogs;
+using ProseFlow.UI.Views.Windows;
 using ShadUI;
 using Action = ProseFlow.Core.Models.Action;
 using Window = Avalonia.Controls.Window;
@@ -35,6 +39,7 @@ public class DialogService(IServiceProvider serviceProvider) : IDialogService
             : null;
     }
     
+    /// <inheritdoc />
     public async Task OpenUrlAsync(string url)
     {
         var mainWindow = GetWindow(false);
@@ -54,6 +59,7 @@ public class DialogService(IServiceProvider serviceProvider) : IDialogService
         }
     }
     
+    /// <inheritdoc />
     public async Task<string?> ShowOpenFileDialogAsync(string title, string filterName, params string[] filterExtensions)
     {
         var mainWindow = GetWindow(false);
@@ -68,7 +74,23 @@ public class DialogService(IServiceProvider serviceProvider) : IDialogService
 
         return result.Count > 0 ? result[0].TryGetLocalPath() : null;
     }
+    
+    /// <inheritdoc />
+    public async Task<string?> ShowOpenFolderDialogAsync(string title)
+    {
+        var mainWindow = GetWindow(false);
+        if (mainWindow is null) return null;
 
+        var result = await mainWindow.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = title,
+            AllowMultiple = false
+        });
+
+        return result.Count > 0 ? result[0].TryGetLocalPath() : null;
+    }
+
+    /// <inheritdoc />
     public async Task<string?> ShowSaveFileDialogAsync(string title, string defaultFileName, string filterName, params string[] filterExtensions)
     {
         var mainWindow = GetWindow(false);
@@ -85,6 +107,7 @@ public class DialogService(IServiceProvider serviceProvider) : IDialogService
         return result?.TryGetLocalPath();
     }
 
+    /// <inheritdoc />
     public async Task<bool> ShowActionEditorDialogAsync(Action action)
     {
         var mainWindow = GetWindow(false);
@@ -98,6 +121,7 @@ public class DialogService(IServiceProvider serviceProvider) : IDialogService
         return await editorWindow.ShowDialog<bool>(mainWindow);
     }
 
+    /// <inheritdoc />
     public void ShowConfirmationDialog(string title, string message, System.Action? onConfirm = null, System.Action? onCancel = null)
     {
         var dialogManager = serviceProvider.GetRequiredService<DialogManager>();
@@ -111,7 +135,8 @@ public class DialogService(IServiceProvider serviceProvider) : IDialogService
         
     }
     
-    public void ShowConfirmationDialogAsync(string title, string message, Func<Task>? onConfirm = null, Func<Task>? onCancel = null)
+    /// <inheritdoc />
+    public void ShowConfirmationDialogAsync(string title, string message, Func<Task>? onConfirm, Func<Task>? onCancel = null)
     {
         var dialogManager = serviceProvider.GetRequiredService<DialogManager>();
         dialogManager
@@ -123,7 +148,67 @@ public class DialogService(IServiceProvider serviceProvider) : IDialogService
             .Show();
         
     }
+
+    /// <inheritdoc />
+    public Task<bool> ShowConfirmationDialogAsync(string title, string message)
+    {
+        var tcs = new TaskCompletionSource<bool>();
+        var dialogManager = serviceProvider.GetRequiredService<DialogManager>();
+        dialogManager
+            .CreateDialog(title, message)
+            .WithPrimaryButton("Confirm", () => tcs.TrySetResult(true))
+            .WithCancelButton("Cancel", () => tcs.TrySetResult(false))
+            .WithMaxWidth(512)
+            .Dismissible()
+            .Show();
+        return tcs.Task;
+    }
+
+    /// <inheritdoc />
+    public Task<bool> ShowOwnedConfirmationDialogAsync(Window owner, string title, string message)
+    {
+        var confirmButton = new Button { Content = "Confirm", IsDefault = true };
+        var cancelButton = new Button { Content = "Cancel", IsCancel = true };
+        confirmButton.Classes.Add("Primary");
+        cancelButton.Classes.Add("Outline");
+
+        var dialog = new Window
+        {
+            Title = title,
+            Width = 600,
+            SizeToContent = SizeToContent.Height,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            SystemDecorations = SystemDecorations.BorderOnly,
+            CanResize = false,
+            ShowInTaskbar = false,
+            CornerRadius = new CornerRadius(8),
+            Content = new StackPanel
+            {
+                Margin = new Thickness(20),
+                Spacing = 15,
+                Children =
+                {
+                    new TextBlock { Text = title, FontSize = 18, FontWeight = FontWeight.SemiBold },
+                    new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap },
+                    new StackPanel
+                    {
+                        Orientation = Orientation.Horizontal,
+                        HorizontalAlignment = HorizontalAlignment.Right,
+                        Spacing = 10,
+                        Margin = new Thickness(0, 10, 0, 0),
+                        Children = { cancelButton, confirmButton }
+                    }
+                }
+            }
+        };
+        
+        confirmButton.Click += (_, _) => dialog.Close(true);
+        cancelButton.Click += (_, _) => dialog.Close(false);
+
+        return dialog.ShowDialog<bool>(owner);
+    }
     
+    /// <inheritdoc />
     public Task<InputDialogResult> ShowInputDialogAsync(string title, string message, string confirmButtonText, string? initialValue = null)
     {
         var tcs = new TaskCompletionSource<InputDialogResult>();
@@ -140,10 +225,8 @@ public class DialogService(IServiceProvider serviceProvider) : IDialogService
 
         return tcs.Task;
     }
-    
-    /// <summary>
-    /// Shows a model library dialog with the given model library view model.
-    /// </summary>
+
+    /// <inheritdoc />
     public Task ShowModelLibraryDialogAsync()
     {
         var tcs = new TaskCompletionSource();
@@ -165,6 +248,7 @@ public class DialogService(IServiceProvider serviceProvider) : IDialogService
         return tcs.Task;
     }
     
+    /// <inheritdoc />
     public void ShowDownloadsDialog()
     {
         var dialogManager = serviceProvider.GetRequiredService<DialogManager>();
@@ -176,6 +260,7 @@ public class DialogService(IServiceProvider serviceProvider) : IDialogService
             .Show();
     }
     
+    /// <inheritdoc />
     public async Task<CustomModelImportData?> ShowImportModelDialogAsync()
     {
         var mainWindow = GetWindow();
@@ -188,6 +273,7 @@ public class DialogService(IServiceProvider serviceProvider) : IDialogService
         return await importViewModel.CompletionSource.Task;
     }
 
+    /// <inheritdoc />
     public async Task<List<ActionConflict>?> ShowConflictResolutionDialogAsync(List<ActionConflict> conflicts)
     {
         var mainWindow = GetWindow();
@@ -247,5 +333,46 @@ public class DialogService(IServiceProvider serviceProvider) : IDialogService
         };
 
         return window.ShowDialog<bool>(owner);
+    }
+    
+    /// <inheritdoc />
+    public async Task<bool> ShowManageConnectionDialogAsync()
+    {
+        var mainWindow = GetWindow();
+        if (mainWindow is null) return false;
+
+        var vm = serviceProvider.GetRequiredService<ManageConnectionViewModel>();
+        var window = new ManageConnectionWindow { DataContext = vm };
+        
+        _ = window.ShowDialog(mainWindow);
+        return await vm.CompletionSource.Task;
+    }
+
+    /// <inheritdoc />
+    public async Task<WorkspacePasswordResult> ShowWorkspacePasswordDialogAsync(WorkspacePasswordMode mode)
+    {
+        var mainWindow = GetWindow();
+        if (mainWindow is null) return new WorkspacePasswordResult(false, null);
+        
+        var vm = serviceProvider.GetRequiredService<WorkspacePasswordViewModel>();
+        vm.Initialize(mode);
+        
+        var window = new WorkspacePasswordWindow { DataContext = vm };
+        
+        _ = window.ShowDialog(mainWindow);
+        return await vm.CompletionSource.Task;
+    }
+    
+    /// <inheritdoc />
+    public async Task<bool> ShowSyncDialogAsync()
+    {
+        var mainWindow = GetWindow();
+        if (mainWindow is null) return false;
+        
+        var vm = serviceProvider.GetRequiredService<SyncViewModel>();
+        var window = new SyncWindow { DataContext = vm };
+        
+        _ = window.ShowDialog(mainWindow);
+        return await vm.CompletionSource.Task;
     }
 }

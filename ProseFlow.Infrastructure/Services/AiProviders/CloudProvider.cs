@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Net.Sockets;
 using System.Text;
 using LlmTornado;
 using LlmTornado.Chat;
@@ -59,46 +60,55 @@ public class CloudProvider(
         foreach (var config in enabledConfigs)
             try
             {
-                var request = new ChatRequest
-                {
-                    Model = config.Model,
-                    Temperature = config.Temperature,
-                    Messages = tornadoMessages,
-                    Stream = true,
-                    CancellationToken = cancellationToken
-                };
-
                 // If a custom BaseUrl is provided, override the TornadoApi instance for this specific call.
                 var conversationApi = !string.IsNullOrWhiteSpace(config.BaseUrl)
                     ? new TornadoApi(new Uri(config.BaseUrl), config.ApiKey)
                     : api;
                 
+                var chatRequest = new ChatRequest
+                {
+                    Model = config.Model,
+                    Temperature = config.Temperature,
+                    Messages = tornadoMessages,
+                    Stream = true,
+                    StreamOptions = ChatStreamOptions.KnownOptionsIncludeUsage,
+                    CancellationToken = cancellationToken
+                };
+
+                var chat = conversationApi.Chat.CreateConversation(chatRequest);
+
                 var fullContent = new StringBuilder();
                 long promptTokens = 0;
                 long completionTokens = 0;
                 var stopwatch = new Stopwatch();
 
-                var stream = conversationApi.Chat.StreamChatEnumerable(request);
+                var streamHandler = new ChatStreamEventHandler
+                {
+                    MessagePartHandler = part =>
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        
+                        if (part.Text is not null) fullContent.Append(part.Text);
+                        
+                        return ValueTask.CompletedTask;
+                    },
+                    OnUsageReceived = usage =>
+                    {
+                        // Aggregate usage data. The final counts are often in the last chunks.
+                        promptTokens = usage.PromptTokens;
+                        completionTokens = usage.CompletionTokens;
+                        return ValueTask.CompletedTask;
+                    }
+                };
                 
                 stopwatch.Start();
-                await foreach (var chunk in stream.WithCancellation(cancellationToken))
-                {
-                    // Aggregate content from response chunks
-                    var delta = chunk.Choices?.FirstOrDefault()?.Delta;
-                    if (delta is { Role: ChatMessageRoles.Assistant, Content: { } contentPart }) fullContent.Append(contentPart);
-
-                    // Aggregate usage data. The final counts are often in the last chunks.
-                    if (chunk.Usage is not null)
-                    {
-                        promptTokens = chunk.Usage.PromptTokens;
-                        completionTokens = chunk.Usage.CompletionTokens;
-                    }
-                }
+                await chat.StreamResponseRich(streamHandler, cancellationToken);
                 stopwatch.Stop();
 
                 // Persist monthly aggregate usage
-                if (promptTokens > 0 || completionTokens > 0) await usageService.AddUsageAsync(promptTokens, completionTokens);
-            
+                if (promptTokens > 0 || completionTokens > 0)
+                    await usageService.AddUsageAsync(promptTokens, completionTokens);
+
                 if (fullContent.Length > 0)
                 {
                     double tokensPerSecond = 0;
@@ -107,19 +117,30 @@ public class CloudProvider(
                         case > 0 when stopwatch.Elapsed.TotalSeconds > 0:
                             tokensPerSecond = completionTokens / stopwatch.Elapsed.TotalSeconds;
                             break;
-                        // Log if we can't calculate TPS despite having tokens
                         case > 0:
-                            logger.LogWarning("Could not calculate Tokens Per Second for provider '{ProviderName}'. Elapsed time was zero.", config.Name);
+                            logger.LogWarning(
+                                "Could not calculate Tokens Per Second for provider '{ProviderName}'. Elapsed time was zero.",
+                                config.Name);
                             break;
                     }
-                    
-                    return new AiResponse(fullContent.ToString(), promptTokens, completionTokens, config.Name, tokensPerSecond);
+
+                    return new AiResponse(fullContent.ToString(), promptTokens, completionTokens, config.Name,
+                        tokensPerSecond);
                 }
             }
-            catch (Exception ex)
+            catch (HttpRequestException)
             {
-                var errorMessage = $"Provider '{config.Name}' failed: {ex.Message}. Trying next provider...";
-                AppEvents.RequestNotification(errorMessage, NotificationType.Warning);
+                AppEvents.RequestNotification($"Provider '{config.Name}' is not available or no internet connection. Trying next provider...", NotificationType.Warning);
+                logger.LogWarning("Provider '{ConfigName}' is not available or not responding or no internet connection.", config.Name);
+            }
+            catch (IOException ex) when (ex.InnerException is SocketException)
+            {
+                AppEvents.RequestNotification($"Connection to '{config.Name}' was lost. Trying next provider...", NotificationType.Warning);
+                logger.LogWarning(ex, "Connection to provider '{ConfigName}' was lost mid-stream (IOException/SocketException). This often happens if the remote server crashes or closes the connection unexpectedly.", config.Name);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                AppEvents.RequestNotification($"Provider '{config.Name}' failed: {ex.Message}. Trying next provider...", NotificationType.Warning);
                 logger.LogError(ex, "Provider '{ConfigName}' failed.", config.Name);
             }
 

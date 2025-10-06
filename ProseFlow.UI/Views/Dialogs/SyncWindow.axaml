@@ -1,0 +1,81 @@
+﻿<shadui:Window x:Class="ProseFlow.UI.Views.Dialogs.SyncWindow"
+               xmlns="https://github.com/avaloniaui"
+               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+               xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+               xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+               xmlns:vm="using:ProseFlow.UI.ViewModels.Dialogs"
+               xmlns:shadui="clr-namespace:ShadUI;assembly=ShadUI"
+               xmlns:icons="clr-namespace:ProseFlow.UI.Controls.Icons"
+               mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="400"
+               x:DataType="vm:SyncViewModel"
+               Title="Workspace Sync"
+               SizeToContent="Height" Width="500"
+               WindowStartupLocation="CenterOwner" CanResize="False" ShowInTaskbar="False"
+               Closing="OnClosing">
+
+    <Window.Styles>
+        <Style Selector="shadui|Card.Recommended">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryColor}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+    </Window.Styles>
+
+    <Panel Margin="24">
+        <StackPanel Spacing="16">
+            <StackPanel Spacing="4">
+                <TextBlock>
+                    <Run Text="Last synced:" FontWeight="Medium" />
+                    <Run Text="{Binding LastSyncText}" />
+                </TextBlock>
+                <TextBlock Text="{Binding StatusText}" Classes="Muted" />
+            </StackPanel>
+
+            <shadui:Card Classes.Recommended="{Binding IsPullRecommended}">
+                <shadui:Card.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <icons:SymbolIcon Symbol="ArrowDownToLine" Size="18" />
+                        <shadui:CardTitle>Pull from Workspace</shadui:CardTitle>
+                    </StackPanel>
+                </shadui:Card.Header>
+                <shadui:Card.Content>
+                    <TextBlock
+                        Text="Update your local settings with the latest from the shared workspace. This will overwrite your local Actions and Providers."
+                        TextWrapping="Wrap" />
+                </shadui:Card.Content>
+                <shadui:Card.Footer>
+                    <Button Classes="Primary" HorizontalAlignment="Right"
+                            Command="{Binding PullChangesCommand}" CommandParameter="{Binding $parent[Window]}"
+                            shadui:ButtonAssist.ShowProgress="{Binding IsBusy}">
+                        Pull Changes
+                    </Button>
+                </shadui:Card.Footer>
+            </shadui:Card>
+
+            <shadui:Card>
+                <shadui:Card.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <icons:SymbolIcon Symbol="ArrowUpFromLine" Size="18" />
+                        <shadui:CardTitle>Push to Workspace (Admins Only)</shadui:CardTitle>
+                    </StackPanel>
+                </shadui:Card.Header>
+                <shadui:Card.Content>
+                    <TextBlock TextWrapping="Wrap">
+                        <Run Classes="Destructive" FontWeight="Bold">⚠️</Run>
+                        <Run
+                            Text=" Overwrite the shared workspace with your local settings. This will affect all other users. Use with caution." />
+                    </TextBlock>
+                </shadui:Card.Content>
+                <shadui:Card.Footer>
+                    <Button Classes="Destructive Outline" HorizontalAlignment="Right"
+                            Command="{Binding PushChangesCommand}" CommandParameter="{Binding $parent[Window]}"
+                            shadui:ButtonAssist.ShowProgress="{Binding IsBusy}">
+                        Push My Changes
+                    </Button>
+                </shadui:Card.Footer>
+            </shadui:Card>
+
+            <Button Classes="Outline" HorizontalAlignment="Right" Content="Close" IsCancel="True"
+                    Command="{Binding CloseCommand}" CommandParameter="{Binding $parent[Window]}" />
+        </StackPanel>
+    </Panel>
+</shadui:Window>

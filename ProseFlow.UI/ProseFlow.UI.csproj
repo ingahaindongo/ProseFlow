@@ -9,8 +9,8 @@
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-        <AvaloniaVersion>11.3.4</AvaloniaVersion>
-        <Version>0.1.0</Version>
+        <AvaloniaVersion>11.3.6</AvaloniaVersion>
+        <Version>0.2.0</Version>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
@@ -48,6 +48,7 @@
 
     <ItemGroup>
         <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
+        <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.1.5" />
         <PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
         <PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
         <PackageReference Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
@@ -55,7 +56,7 @@
         <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
         <PackageReference Include="DiffPlex" Version="1.9.0" />
-        <PackageReference Include="LiveChartsCore.SkiaSharpView.Avalonia" Version="2.0.0-rc5.4" />
+        <PackageReference Include="LiveChartsCore.SkiaSharpView.Avalonia" Version="2.0.0-rc6.1" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.7">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
@@ -68,15 +69,11 @@
         <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Serilog.Sinks.Console" Version="6.0.0" />
         <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Serilog.Sinks.Debug" Version="3.0.0" />
         <PackageReference Include="ShadUI" Version="0.1.5" />
+        <PackageReference Include="Xaml.Behaviors.Interactivity" Version="11.3.6.4" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\ProseFlow.Application\ProseFlow.Application.csproj" />
         <ProjectReference Include="..\ProseFlow.Infrastructure\ProseFlow.Infrastructure.csproj" />
     </ItemGroup>
-
-    <ItemGroup>
-      <Compile Remove="ViewModels\Windows\DiffSegmentViewModel.cs" />
-    </ItemGroup>
-
 </Project>

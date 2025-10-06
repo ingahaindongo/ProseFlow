@@ -60,10 +60,11 @@ public class LocalModelManagerService(ILogger<LocalModelManagerService> logger)
             {
                 ContextSize = (uint)(settings.LocalModelContextSize > 0 ? settings.LocalModelContextSize : 4096),
                 GpuLayerCount = settings.PreferGpu ? -1 : 0,
-                Threads = settings.LocalCpuCores > 0 ? settings.LocalCpuCores : null,
+                MainGpu = settings.GpuDeviceIndex,
+                Threads = settings.LocalCpuCores > 0 ? settings.LocalCpuCores : Environment.ProcessorCount,
                 UseMemorymap = settings.LocalModelMemoryMap,
                 UseMemoryLock = settings.LocalModelMemorylock,
-                FlashAttention = true
+                FlashAttention = settings.EnableFlashAttention
             };
 
             var progressReporter = new Progress<float>(progress =>

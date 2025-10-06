@@ -1,0 +1,192 @@
+name: "🐛 Bug Report"
+description: Create a report to help us improve ProseFlow
+title: "[BUG] Brief description of the bug"
+labels: ["bug"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Thank you for reporting a bug! To help us understand and fix the issue, please provide the following information:**
+
+  - type: checkboxes
+    id: requirements
+    attributes:
+      label: Requirements
+      options:
+        - label: I have searched the existing issues to ensure this bug has not already been reported.
+          required: true
+        - label: I have provided a clear and concise description of the bug.
+          required: true
+        - label: I have provided detailed steps to reproduce the bug.
+          required: true
+        - label: I have provided error messages or logs from the application if applicable.
+          required: true
+        - label: I have completed the environment information below.
+          required: true
+
+  - type: textarea
+    id: describe-bug
+    attributes:
+      label: 1. Describe the Bug
+      description: A clear and concise description of what the bug is.
+      placeholder: Tell us what you're seeing!
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: 2. Steps to Reproduce
+      description: |
+        Please provide detailed steps to reproduce the behavior:
+        1. Go to the 'Actions' page and create an Action with the following settings...
+        2. In [Application Name] (e.g., VS Code, Obsidian), select the text "..."
+        3. Press the hotkey to open the Floating Action Menu and select the action...
+        4. See error / Observe unexpected behavior.
+      placeholder: Describe the exact steps here.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: 3. Expected Behavior
+      description: A clear and concise description of what you expected to happen.
+      placeholder: What should have happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: current-behavior
+    attributes:
+      label: 4. Current Behavior
+      description: A clear and concise description of what actually happens.
+      placeholder: What is happening now?
+    validations:
+      required: true
+
+  - type: textarea
+    id: error-messages
+    attributes:
+      label: 5. Error Messages & Logs (if applicable)
+      description: |
+        If an exception is thrown or something goes wrong, please paste the full error message and any relevant logs below.
+        You can find the application logs by going to **About -> Open Log Folder**.
+      placeholder: |
+        ```
+        (Paste full error message and relevant log output here)
+        ```
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: reproducible-config
+    attributes:
+      label: 6. Minimal Reproducible Configuration (if applicable)
+      description: |
+        If the bug is related to a specific Action or Provider configuration, please export your actions to JSON and paste the relevant part here. This is crucial for us to quickly identify and fix the issue.
+      placeholder: |
+        ```json
+        {
+          "Writing": {
+            "Proofread": {
+              "prefix": "Proofread the following text:",
+              "instruction": "You are an expert editor...",
+              // ...
+            }
+          }
+        }
+        ```
+      render: shell
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        ### 7. Environment (please complete the following information):
+
+  - type: input
+    id: pf-version
+    attributes:
+      label: ProseFlow Version
+      description: e.g., 0.2.0, or commit SHA if building from source. Found in the 'About' page.
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      description: e.g., Windows 11, macOS Sonoma 14.2, Ubuntu 22.04
+    validations:
+      required: true
+
+  - type: input
+    id: architecture
+    attributes:
+      label: Architecture
+      description: e.g., x64, ARM64
+    validations:
+      required: true
+
+  - type: input
+    id: ai-provider
+    attributes:
+      label: AI Provider Used (if relevant)
+      description: e.g., Cloud - OpenAI, Local - Llama 3 8B Instruct
+    validations:
+      required: false
+
+  - type: input
+    id: local-model-details
+    attributes:
+      label: Local Model Details (if relevant)
+      description: If using a local model, please specify the model name and quantization (e.g., Qwen2-7B-Instruct-Q8_0.gguf).
+    validations:
+      required: false
+
+  - type: input
+    id: hardware
+    attributes:
+      label: Hardware (especially GPU, if using a local model)
+      description: e.g., NVIDIA RTX 4090, Apple M2 Pro, Intel UHD Graphics
+    validations:
+      required: false
+
+  - type: textarea
+    id: affected-components
+    attributes:
+      label: 8. Affected Components (if known)
+      description: |
+        List any specific ProseFlow components or features you believe are related to this bug.
+        e.g., `Action Editor`, `Floating Orb`, `Workspace Sync`, `Local Provider`, `Cloud Provider`, `Dashboard`
+      placeholder: |
+        e.g., `Floating Orb`, `Local Provider`
+    validations:
+      required: false
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: 9. Impact
+      description: Describe the impact of this bug (e.g., crash, incorrect text output, performance degradation, minor UI glitch).
+      placeholder: How severely does this bug affect you?
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: 10. Additional Context
+      description: |
+        Add any other context about the problem here.
+        * Does this bug happen in all applications or only a specific one (e.g., only in Chrome, only in VS Code)?
+        * Were there any recent changes to your environment or ProseFlow version?
+        * Is this bug consistently reproducible, or does it happen intermittently?
+      placeholder: Any other relevant information.
+    validations:
+      required: false

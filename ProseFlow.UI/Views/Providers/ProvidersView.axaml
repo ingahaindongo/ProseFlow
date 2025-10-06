@@ -62,48 +62,66 @@
                             </StackPanel>
                         </DockPanel>
                     </shadui:Card.Header>
-                    <DataGrid
-                        b:DataGridDragDropBehavior.ReorderCommand="{Binding ReorderProviderCommand}"
-                        AutoGenerateColumns="False"
-                        CanUserReorderColumns="False" CanUserResizeColumns="True" CanUserSortColumns="False"
-                        GridLinesVisibility="Horizontal" IsReadOnly="True"
-                        ItemsSource="{Binding CloudProviders}">
-                        <DataGrid.Columns>
-                            <DataGridTemplateColumn Width="40">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <icons:SymbolIcon Size="18" Symbol="MoveVertical"
-                                                    ToolTip.Tip="Drag and drop to reorder providers." />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTextColumn Width="40" Binding="{Binding SortOrder}" Header="#" />
-                            <DataGridTextColumn Width="*" MinWidth="160" Binding="{Binding Name}"
-                                                Header="Configuration Name" />
-                            <DataGridTextColumn Width="80" Binding="{Binding IsEnabled}" Header="Enabled" />
-                            <DataGridTextColumn Width="150" MinWidth="85" Binding="{Binding ProviderType}"
-                                                Header="Provider" />
-                            <DataGridTextColumn Width="200" MinWidth="85" Binding="{Binding Model}" Header="Model" />
-                            <DataGridTemplateColumn Width="120" Header="Actions">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
-                                            <Button Classes="Ghost" ToolTip.Tip="Edit Provider"
-                                                    Command="{Binding $parent[UserControl].((vm:ProvidersViewModel)DataContext).EditProviderCommand, FallbackValue={x:Null}}"
-                                                    CommandParameter="{Binding .}">
-                                                <icons:SymbolIcon Size="18" Symbol="Pen" />
-                                            </Button>
-                                            <Button Classes="Ghost Destructive" ToolTip.Tip="Delete Provider"
-                                                    Command="{Binding $parent[UserControl].((vm:ProvidersViewModel)DataContext).DeleteProviderCommand, FallbackValue={x:Null}}"
-                                                    CommandParameter="{Binding .}">
-                                                <icons:SymbolIcon Size="18" Symbol="Trash2" />
-                                            </Button>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
+
+                    <Panel>
+                        <!-- Empty State -->
+                        <Button Classes="Ghost" MinHeight="210" Margin="0,48,0,16" HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch" IsVisible="{Binding !HasCloudProviders}"
+                                Command="{Binding AddProviderCommand}">
+                            <StackPanel Spacing="16">
+                                <icons:SymbolIcon Symbol="Cable" Size="64" HorizontalAlignment="Center" />
+                                <TextBlock Classes="h4 Muted" Text="No Cloud Providers" HorizontalAlignment="Center" />
+                                <TextBlock Classes="p Muted" HorizontalAlignment="Center"
+                                           Text="Click here or 'Add Provider' to connect to a service like OpenAI or Groq." />
+                                <icons:SymbolIcon Symbol="DiamondPlus" Size="32" HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
+                        <DataGrid
+                            IsVisible="{Binding HasCloudProviders}"
+                            b:DataGridDragDropBehavior.ReorderCommand="{Binding ReorderProviderCommand}"
+                            AutoGenerateColumns="False"
+                            CanUserReorderColumns="False" CanUserResizeColumns="True" CanUserSortColumns="False"
+                            GridLinesVisibility="Horizontal" IsReadOnly="True"
+                            ItemsSource="{Binding CloudProviders}">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Width="40">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <icons:SymbolIcon Size="18" Symbol="MoveVertical"
+                                                              ToolTip.Tip="Drag and drop to reorder providers." />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Width="40" Binding="{Binding SortOrder}" Header="#" />
+                                <DataGridTextColumn Width="*" MinWidth="160" Binding="{Binding Name}"
+                                                    Header="Configuration Name" />
+                                <DataGridTextColumn Width="80" Binding="{Binding IsEnabled}" Header="Enabled" />
+                                <DataGridTextColumn Width="150" MinWidth="85" Binding="{Binding ProviderType}"
+                                                    Header="Provider" />
+                                <DataGridTextColumn Width="200" MinWidth="85" Binding="{Binding Model}" Header="Model" />
+                                <DataGridTemplateColumn Width="120" Header="Actions">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" Spacing="4"
+                                                        HorizontalAlignment="Center">
+                                                <Button Classes="Ghost" ToolTip.Tip="Edit Provider"
+                                                        Command="{Binding $parent[UserControl].((vm:ProvidersViewModel)DataContext).EditProviderCommand, FallbackValue={x:Null}}"
+                                                        CommandParameter="{Binding .}">
+                                                    <icons:SymbolIcon Size="18" Symbol="Pen" />
+                                                </Button>
+                                                <Button Classes="Ghost Destructive" ToolTip.Tip="Delete Provider"
+                                                        Command="{Binding $parent[UserControl].((vm:ProvidersViewModel)DataContext).DeleteProviderCommand, FallbackValue={x:Null}}"
+                                                        CommandParameter="{Binding .}">
+                                                    <icons:SymbolIcon Size="18" Symbol="Trash2" />
+                                                </Button>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Panel>
                 </shadui:Card>
 
 
@@ -154,9 +172,28 @@
 
                         <!-- GPU and CPU Settings -->
                         <StackPanel Spacing="8" Margin="8,0">
-                            <ToggleSwitch IsChecked="{Binding PreferGpu, FallbackValue={x:False}}">
-                                Prefer GPU acceleration (if available)
-                            </ToggleSwitch>
+                            <StackPanel Spacing="4">
+                                <ToggleSwitch IsChecked="{Binding PreferGpu, FallbackValue={x:False}}">
+                                    Prefer GPU acceleration (if available)
+                                </ToggleSwitch>
+                                <ComboBox
+                                    Margin="28,0,0,0"
+                                    IsVisible="{Binding PreferGpu}"
+                                    shadui:ControlAssist.Label="Target GPU"
+                                    ToolTip.Tip="Select a specific GPU or let the system choose automatically."
+                                    ItemsSource="{Binding AvailableGpus}"
+                                    SelectedItem="{Binding SelectedGpu, Mode=TwoWay}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate DataType="core:GpuDeviceInfo">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Name}" />
+                                                <TextBlock Text="{Binding VramGb, StringFormat=' - ({0} GB)'}"
+                                                           IsVisible="{Binding VramGb, Converter={StaticResource ConditionCheckConverter}, ConverterParameter=0|False|True}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
 
                             <ToggleSwitch
                                 IsChecked="{Binding Settings.LocalModelLoadOnStartup, FallbackValue={x:False}}">
@@ -180,6 +217,12 @@
                                 ToolTip.Tip="Prevents the model from being swapped to disk, ensuring stable and fast performance. This is highly recommended but requires that your system has enough available RAM to hold the entire model.">
                                 Lock Model in Memory"
                             </ToggleSwitch>
+
+                            <ToggleSwitch
+                                IsChecked="{Binding Settings.EnableFlashAttention, FallbackValue={x:True}}"
+                                ToolTip.Tip="Enables Flash Attention for faster inference. This option is only effective when using GPU acceleration, Can be incompatible with some models">
+                                Enable Flash Attention
+                            </ToggleSwitch>
                         </StackPanel>
 
                         <!-- Auto-unload timeout setting -->
@@ -187,11 +230,23 @@
                               IsEnabled="{Binding Settings.LocalModelAutoUnloadEnabled, FallbackValue={x:True}}">
                             <TextBlock Text="Idle Timeout (minutes)" VerticalAlignment="Center" />
                             <TextBox Grid.Column="1" Width="150"
-                                     Text="{Binding Settings.LocalModelIdleTimeoutMinutes, Mode=TwoWay, Converter={StaticResource NumericStringConverter}}" />
+                                     Text="{Binding Settings.LocalModelIdleTimeoutMinutes, Mode=TwoWay, Converter={StaticResource NumericStringConverter}, FallbackValue=0}" />
                         </Grid>
 
                         <!-- Temperature Control -->
                         <StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="Threads" ToolTip.Tip="Number of threads to use for inference" />
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                                    <Slider Grid.Column="0" VerticalAlignment="Center"
+                                            Maximum="{Binding AvailableCpuCores}" Minimum="1"
+                                            TickFrequency="1" IsSnapToTickEnabled="True"
+                                            TickPlacement="BottomRight"
+                                            Value="{Binding LocalCpuCores, Mode=TwoWay}" />
+                                    <TextBox Grid.Column="1" Width="150"
+                                             Text="{Binding LocalCpuCores, Mode=TwoWay, Converter={StaticResource NumericStringConverter}}" />
+                                </Grid>
+                            </StackPanel>
                             <StackPanel>
                                 <TextBlock Text="Temperature"
                                            ToolTip.Tip="Controls the creativity of the model's output" />
@@ -207,8 +262,8 @@
                             <StackPanel>
                                 <TextBlock Text="Context Length" ToolTip.Tip="Number of tokens to keep in context" />
                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
-                                    <Slider Grid.Column="0" VerticalAlignment="Center" Maximum="64000" Minimum="0"
-                                            TickFrequency="1000" IsSnapToTickEnabled="True"
+                                    <Slider Grid.Column="0" VerticalAlignment="Center" Maximum="65536" Minimum="0"
+                                            TickFrequency="1024" IsSnapToTickEnabled="True"
                                             TickPlacement="BottomRight"
                                             Value="{Binding LocalContextSize, Mode=TwoWay}" />
                                     <TextBox Grid.Column="1" Width="150"
@@ -219,8 +274,8 @@
                                 <TextBlock Text="Max Tokens"
                                            ToolTip.Tip="Maximum number of tokens to generate per request" />
                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
-                                    <Slider Grid.Column="0" VerticalAlignment="Center" Maximum="64000" Minimum="0"
-                                            TickFrequency="1000" IsSnapToTickEnabled="True"
+                                    <Slider Grid.Column="0" VerticalAlignment="Center" Maximum="65536" Minimum="0"
+                                            TickFrequency="1024" IsSnapToTickEnabled="True"
                                             TickPlacement="BottomRight"
                                             Value="{Binding LocalMaxTokens, Mode=TwoWay}" />
                                     <TextBox Grid.Column="1" Width="150"

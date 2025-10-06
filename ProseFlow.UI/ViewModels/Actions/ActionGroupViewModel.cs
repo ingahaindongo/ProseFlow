@@ -17,5 +17,7 @@ public partial class ActionGroupViewModel(string name) : ViewModelBase
     [ObservableProperty]
     private bool _isSelected;
 
+    public bool IsFavoritesGroup { get; set; }
+
     public ObservableCollection<ActionItemViewModel> Actions { get; init; } = [];
 }

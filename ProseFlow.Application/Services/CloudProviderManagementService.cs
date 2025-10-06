@@ -73,6 +73,31 @@ public class CloudProviderManagementService(IServiceScopeFactory scopeFactory, I
         return ExecuteCommandAsync(unitOfWork => unitOfWork.CloudProviderConfigurations.UpdateOrderAsync(orderedConfigs));
     }
     
+    /// <summary>
+    /// Overwrites all existing provider configurations with a new set, typically from an import.
+    /// </summary>
+    /// <param name="newProviders">The list of providers to import. Their API keys should already be decrypted.</param>
+    public Task ImportProvidersAsync(List<CloudProviderConfiguration> newProviders)
+    {
+        return ExecuteCommandAsync(async unitOfWork =>
+        {
+            // Clear existing providers
+            var existingProviders = await unitOfWork.CloudProviderConfigurations.GetAllAsync();
+            foreach(var provider in existingProviders)
+            {
+                unitOfWork.CloudProviderConfigurations.Delete(provider);
+            }
+
+            // Add new providers
+            foreach (var provider in newProviders)
+            {
+                // Reset ID to ensure it's treated as a new entity. since AddAsync override should handle encryption.
+                provider.Id = 0; 
+                await unitOfWork.CloudProviderConfigurations.AddAsync(provider);
+            }
+        });
+    }
+    
     #region Private Helpers
 
     /// <summary>

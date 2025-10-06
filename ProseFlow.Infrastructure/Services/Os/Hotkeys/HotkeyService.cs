@@ -4,7 +4,7 @@ using Action = System.Action;
 using EventMask = SharpHook.Data.EventMask;
 using KeyCode = SharpHook.Data.KeyCode;
 
-namespace ProseFlow.Infrastructure.Services.Os;
+namespace ProseFlow.Infrastructure.Services.Os.Hotkeys;
 
 /// <summary>
 /// Implements global hotkey management using SharpHook.
@@ -16,9 +16,13 @@ public sealed class HotkeyService(HotkeyRecordingService recordingService) : IHo
     private (KeyCode key, EventMask modifiers) _actionMenuCombination;
     private (KeyCode key, EventMask modifiers) _smartPasteCombination;
 
+    /// <inheritdoc />
     public event Action? ActionMenuHotkeyPressed;
+    
+    /// <inheritdoc />
     public event Action? SmartPasteHotkeyPressed;
 
+    /// <inheritdoc />
     public Task StartHookAsync()
     {
         _hook.KeyPressed += OnKeyPressed;
@@ -26,12 +30,18 @@ public sealed class HotkeyService(HotkeyRecordingService recordingService) : IHo
         return _hook.RunAsync();
     }
 
+    /// <inheritdoc />
     public void UpdateHotkeys(string actionMenuHotkey, string smartPasteHotkey)
     {
         _actionMenuCombination = HotkeyConverter.FromFriendlyString(actionMenuHotkey);
         _smartPasteCombination = HotkeyConverter.FromFriendlyString(smartPasteHotkey);
     }
 
+    /// <summary>
+    /// Handles a key press event, checking for hotkeys and starting the recording service if necessary.
+    /// </summary>
+    /// <param name="sender">The object that raised the event.</param>
+    /// <param name="e">The event arguments.</param>
     private void OnKeyPressed(object? sender, KeyboardHookEventArgs e)
     {
         var capturedKey = e.Data.KeyCode;
@@ -76,6 +86,11 @@ public sealed class HotkeyService(HotkeyRecordingService recordingService) : IHo
             SmartPasteHotkeyPressed?.Invoke();
     }
     
+    /// <summary>
+    /// Handles a key release event, updating the live feedback text when a modifier is released.
+    /// </summary>
+    /// <param name="sender">The object that raised the event.</param>
+    /// <param name="e">The event arguments.</param>
     private void OnKeyReleased(object? sender, KeyboardHookEventArgs e)
     {
         // This event is now only used to update the live feedback text when a modifier is released.
@@ -86,6 +101,7 @@ public sealed class HotkeyService(HotkeyRecordingService recordingService) : IHo
         recordingService.OnRecordingStateUpdated(modifiersOnlyString + "...");
     }
     
+    /// <inheritdoc />
     public void Dispose()
     {
         _hook.KeyPressed -= OnKeyPressed;

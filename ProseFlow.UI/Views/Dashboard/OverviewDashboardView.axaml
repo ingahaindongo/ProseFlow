@@ -8,58 +8,165 @@
     xmlns:controls="using:ProseFlow.UI.Controls.Dashboard"
     xmlns:shadui="clr-namespace:ShadUI;assembly=ShadUI"
     xmlns:avalonia="clr-namespace:LiveChartsCore.SkiaSharpView.Avalonia;assembly=LiveChartsCore.SkiaSharpView.Avalonia"
+    xmlns:b="using:ProseFlow.UI.Behaviors"
+    xmlns:core="using:ProseFlow.Core.Models"
+    xmlns:enums="using:ProseFlow.Core.Enums"
+    xmlns:icons="clr-namespace:ProseFlow.UI.Controls.Icons"
     mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
     x:DataType="vm:OverviewDashboardViewModel">
-    
+
     <ScrollViewer>
         <StackPanel Spacing="24">
             <!-- Header -->
             <DockPanel>
-                <ComboBox DockPanel.Dock="Right" ItemsSource="{Binding DateRanges}" SelectedItem="{Binding SelectedDateRange}" Width="150" />
+                <ComboBox DockPanel.Dock="Right" ItemsSource="{Binding DateRanges}"
+                          SelectedItem="{Binding SelectedDateRange}" Width="150" />
             </DockPanel>
 
             <!-- KPI Cards -->
-            <UniformGrid Columns="3" ColumnSpacing="16">
-                <controls:OverviewCard Title="Total Actions" Icon="Activity" Value="{Binding TotalActionsExecuted, StringFormat='N0'}" Hint="Cloud + Local" />
-                <controls:OverviewCard Title="Cloud Tokens" Icon="Cloud" Value="{Binding TotalCloudTokens, StringFormat='N0'}" Hint="In selected period" />
-                <controls:OverviewCard Title="Local Tokens" Icon="HardDrive" Value="{Binding TotalLocalTokens, StringFormat='N0'}" Hint="In selected period" />
-            </UniformGrid>
-            
-            <!-- Main Grid -->
-            <Grid ColumnDefinitions="2*, 1*" ColumnSpacing="16">
-                <!-- Left: Chart -->
-                <shadui:Card Grid.Column="0">
-                    <shadui:Card.Header>
-                        <shadui:CardTitle>Usage Over Time (Combined)</shadui:CardTitle>
-                    </shadui:Card.Header>
-                    <avalonia:CartesianChart Series="{Binding Series}" XAxes="{Binding XAxes}" YAxes="{Binding YAxes}" Height="300" Margin="12,0,12,12" LegendPosition="Bottom" />
-                </shadui:Card>
-                
-                <!-- Right: Status & Recents -->
-                <StackPanel Grid.Column="1" Spacing="16">
-                    <shadui:Card>
-                        <shadui:Card.Header>
-                            <shadui:CardTitle>Local Model</shadui:CardTitle>
-                        </shadui:Card.Header>
-                        <shadui:Card.Content>
-                            <StackPanel Spacing="8">
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="16">
+                <controls:OverviewCard Grid.Column="0" Title="Total Actions Executed" Icon="Activity"
+                                       Value="{Binding TotalActionsExecuted, StringFormat='N0'}"
+                                       Hint="Cloud + Local" />
+                <controls:OverviewCard Grid.Column="1" Title="Total Tokens Processed" Icon="Cpu"
+                                       Value="{Binding TotalTokens, StringFormat='N0'}"
+                                       Hint="In selected period" />
+
+                <!-- Local Model Status Card -->
+                <shadui:Card Grid.Column="2">
+                    <shadui:Card.Content>
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16" VerticalAlignment="Center">
+                            <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
+                                <TextBlock Classes="Small" Text="Local Model Status" />
                                 <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                    <Ellipse Width="10" Height="10" Fill="{Binding LocalModelStatus, Converter={StaticResource StatusToColorConverter}}" />
+                                    <Ellipse Width="10" Height="10"
+                                             Fill="{Binding LocalModelStatus, Converter={StaticResource StatusToColorConverter}}" />
                                     <TextBlock Text="{Binding LocalModelStatus}" FontWeight="Medium" />
                                 </StackPanel>
-                                <TextBlock Text="{Binding LocalModelName}" Classes="Muted" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding LocalModelName}" Classes="Caption Muted"
+                                           TextTrimming="CharacterEllipsis" />
                             </StackPanel>
-                        </shadui:Card.Content>
-                        <shadui:Card.Footer>
-                            <Button Classes="Primary"
+                            <Button Grid.Column="1"
+                                    Classes="Primary"
                                     shadui:ButtonAssist.ShowProgress="{Binding IsModelLoading}"
                                     Command="{Binding ToggleLocalModelCommand}">
-                                <TextBlock Text="{Binding LocalModelStatus, Converter={StaticResource StatusToButtonTextConverter}}" />
+                                <TextBlock
+                                    Text="{Binding LocalModelStatus, Converter={StaticResource StatusToButtonTextConverter}}" />
                             </Button>
-                        </shadui:Card.Footer>
+                        </Grid>
+                    </shadui:Card.Content>
+                </shadui:Card>
+            </Grid>
+
+            <!-- Main Grid -->
+            <Grid ColumnDefinitions="2*, 1*" ColumnSpacing="16">
+                <!-- Left: Chart & Logs -->
+                <shadui:Card Grid.Column="0" Name="ChartsCard">
+                    <TabControl>
+                        <TabItem Header="Usage Chart">
+                            <avalonia:CartesianChart Series="{Binding Series}" XAxes="{Binding XAxes}"
+                                                     YAxes="{Binding YAxes}" Background="{Binding #ChartsCard.Background}"
+                                                     Height="300" Margin="12,0,12,12" LegendPosition="Bottom" />
+                        </TabItem>
+                        <TabItem Header="Application Log">
+                            <ScrollViewer Margin="12,0,12,12" b:AutoScrollBehavior.IsEnabled="True" Height="300">
+                                <Grid>
+                                    <ItemsControl ItemsSource="{Binding ApplicationLogs}"
+                                                  IsVisible="{Binding ApplicationLogs.Count, Converter={StaticResource ConditionCheckConverter}, ConverterParameter='>0|True|False'}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="core:LogEntry">
+                                                <Grid ColumnDefinitions="Auto,Auto,*" Margin="0,2">
+                                                    <Grid.Styles>
+                                                        <Style Selector="TextBlock, SelectableTextBlock">
+                                                            <Setter Property="Foreground"
+                                                                    Value="{Binding Level, Converter={StaticResource LogLevelToColorConverter}}" />
+                                                        </Style>
+                                                    </Grid.Styles>
+
+                                                    <TextBlock Grid.Column="0"
+                                                               Text="{Binding Timestamp, StringFormat='HH:mm:ss'}"
+                                                               Classes="Small Muted" Margin="0,0,12,0" />
+                                                    <TextBlock Grid.Column="1" Text="{Binding Level}"
+                                                               FontWeight="Bold" Margin="0,0,12,0" />
+                                                    <SelectableTextBlock Grid.Column="2" Text="{Binding Message}"
+                                                                         TextWrapping="Wrap" Classes="Code Small" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <!-- If there are no logs, show a message -->
+                                    <TextBlock Text="No application logs recorded yet." Classes="h3" Opacity="0.5"
+                                               VerticalAlignment="Center" HorizontalAlignment="Center"
+                                               IsVisible="{Binding ApplicationLogs.Count, Converter={StaticResource ConditionCheckConverter}, ConverterParameter='0|True|False'}" />
+                                </Grid>
+                            </ScrollViewer>
+                        </TabItem>
+                    </TabControl>
+                </shadui:Card>
+
+                <!-- Right: Active Processes & Recents -->
+                <Grid Grid.Column="1" RowDefinitions="*,Auto" RowSpacing="16">
+                    <!-- Active Processes Widget -->
+                    <shadui:Card Grid.Row="0">
+                        <shadui:Card.Header>
+                            <shadui:CardTitle>Active Processes</shadui:CardTitle>
+                        </shadui:Card.Header>
+                        <Panel MinHeight="100">
+                            <!-- Empty State -->
+                            <StackPanel Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="16"
+                                        IsVisible="{Binding !ActiveActions.Count}">
+                                <icons:SymbolIcon Symbol="Coffee" Size="24" Opacity="0.5"
+                                                  HorizontalAlignment="Center" />
+                                <TextBlock Classes="Small Muted" Text="No background processes are running." />
+                            </StackPanel>
+                            
+                            <ScrollViewer MaxHeight="150" IsVisible="{Binding ActiveActions.Count}">
+                                <ItemsControl ItemsSource="{Binding ActiveActions}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="vm:TrackedActionViewModel">
+                                            <Grid ColumnDefinitions="Auto, *, Auto, Auto" ColumnSpacing="8"
+                                                  Margin="0,6"
+                                                  VerticalAlignment="Center">
+                                                <PathIcon Grid.Column="0" Width="16" Height="16"
+                                                          Data="{Binding Action.Icon, Converter={StaticResource StringToIconConverter}}"
+                                                          Foreground="{x:Null}">
+                                                    <PathIcon.Styles>
+                                                        <Style Selector="Path">
+                                                            <Setter Property="Stroke"
+                                                                    Value="{DynamicResource PrimaryColor}" />
+                                                            <Setter Property="StrokeThickness" Value="1" />
+                                                        </Style>
+                                                    </PathIcon.Styles>
+                                                </PathIcon>
+
+                                                <TextBlock Grid.Column="1" Text="{Binding Action.Name}"
+                                                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+
+                                                <TextBlock Grid.Column="2" Text="{Binding ElapsedTime}"
+                                                           Classes="Small Muted" VerticalAlignment="Center" />
+
+                                                <StackPanel Grid.Column="3" Spacing="4" Orientation="Horizontal">
+                                                    <icons:SymbolIcon Symbol="Clock" Size="16" Classes="Muted" VerticalAlignment="Center"
+                                                                      IsVisible="{Binding Action.Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static enums:ActionStatus.Queued}}" />
+                                                    <icons:SymbolIcon Symbol="Loader" Size="16" Classes="Muted" VerticalAlignment="Center"
+                                                                 IsVisible="{Binding Action.Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static enums:ActionStatus.Processing}}" />
+                                                    <Button Classes="Ghost Destructive"
+                                                            Command="{Binding $parent[UserControl].((vm:OverviewDashboardViewModel)DataContext).CancelActionCommand, FallbackValue={x:Null}}"
+                                                            CommandParameter="{Binding Action.Id}">
+                                                        <icons:SymbolIcon Symbol="X" Size="16" />
+                                                    </Button>
+                                                </StackPanel>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Panel>
                     </shadui:Card>
-                    
-                    <shadui:Card>
+
+                    <!-- Recent Activity Widget -->
+                    <shadui:Card Grid.Row="1">
                         <shadui:Card.Header>
                             <shadui:CardTitle>Recent Activity</shadui:CardTitle>
                         </shadui:Card.Header>
@@ -67,14 +174,15 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <DockPanel Margin="0,6">
-                                        <TextBlock DockPanel.Dock="Right" Classes="Small Muted" Text="{Binding Timestamp, Converter={StaticResource RelativeTimeConverter}}" />
+                                        <TextBlock DockPanel.Dock="Right" Classes="Small Muted"
+                                                   Text="{Binding Timestamp, Converter={StaticResource RelativeTimeConverter}}" />
                                         <TextBlock Text="{Binding ActionName}" />
                                     </DockPanel>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </shadui:Card>
-                </StackPanel>
+                </Grid>
             </Grid>
         </StackPanel>
     </ScrollViewer>

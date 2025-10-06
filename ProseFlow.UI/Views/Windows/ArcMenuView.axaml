@@ -1,0 +1,115 @@
+﻿<shadUi:Window x:Class="ProseFlow.UI.Views.Windows.ArcMenuView"
+               xmlns="https://github.com/avaloniaui"
+               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+               xmlns:vm="using:ProseFlow.UI.ViewModels.Windows"
+               xmlns:controls="using:ProseFlow.UI.Controls"
+               xmlns:shadUi="clr-namespace:ShadUI;assembly=ShadUI"
+               xmlns:windows="clr-namespace:ProseFlow.UI.Views.Windows"
+               x:DataType="vm:ArcMenuViewModel"
+               SystemDecorations="None" CanResize="False" ShowInTaskbar="False" Topmost="True"
+               SizeToContent="WidthAndHeight"
+               WindowStartupLocation="Manual" ExtendClientAreaToDecorationsHint="False" ClipToBounds="False"
+               ShowTitlebarBackground="False" IsTitleBarVisible="False" Background="Transparent"
+               ShowBottomBorder="False"
+               BorderBrush="Transparent" BorderThickness="0" ShowActivated="True" Focusable="True"
+               Deactivated="OnDeactivated">
+
+    <ItemsRepeater x:Name="ArcItemsRepeater" ItemsSource="{Binding Actions}" ClipToBounds="False">
+        <ItemsRepeater.Resources>
+            <controls:ArcPanel x:Key="ArcPanelLayout" Radius="100" StartAngle="-150" SweepAngle="120"
+                               AutoEdgeDetect="True" />
+        </ItemsRepeater.Resources>
+        <ItemsRepeater.Layout>
+            <StaticResource ResourceKey="ArcPanelLayout" />
+        </ItemsRepeater.Layout>
+        <ItemsRepeater.ItemTemplate>
+            <DataTemplate DataType="vm:ArcMenuItemViewModel">
+                <Button Classes="ghost" Width="64" Height="64" CornerRadius="32"
+                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                        Command="{Binding $parent[Window].((vm:ArcMenuViewModel)DataContext).SelectActionCommand, FallbackValue={x:Null}}"
+                        CommandParameter="{Binding Action}"
+                        RenderTransformOrigin="50%,50%"
+                        windows:AnimationAttach.Delay="{Binding AnimationDelay}"
+                        ToolTip.Tip="{Binding Action.Name}">
+                    <Button.Styles>
+                        <!-- Base style -->
+                        <Style Selector="Button">
+                            <Setter Property="Opacity" Value="0" />
+                            <Setter Property="RenderTransform">
+                                <TranslateTransform X="0" Y="20" />
+                            </Setter>
+                            <Setter Property="Transitions">
+                                <Transitions>
+                                    <DoubleTransition Property="Opacity" Duration="0:0:0.25" Easing="CubicEaseOut" />
+                                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.3"
+                                                                   Easing="BackEaseOut" />
+                                </Transitions>
+                            </Setter>
+                        </Style>
+
+                        <!-- Hover style -->
+                        <Style Selector="Button:pointerover">
+                            <Setter Property="RenderTransform">
+                                <ScaleTransform ScaleX="1.1" ScaleY="1.1" />
+                            </Setter>
+                        </Style>
+
+                        <!-- PathIcon Base style -->
+                        <Style Selector="PathIcon">
+                            <Setter Property="Width" Value="24" />
+                            <Setter Property="Height" Value="24" />
+                            <Setter Property="Transitions">
+                                <Transitions>
+                                    <DoubleTransition Property="Width" Duration="0:0:0.2" Easing="CubicEaseOut" />
+                                    <DoubleTransition Property="Height" Duration="0:0:0.2" Easing="CubicEaseOut" />
+                                </Transitions>
+                            </Setter>
+                        </Style>
+
+                        <!-- PathIcon Hover style (when the parent Button is hovered) -->
+                        <Style Selector="Button:pointerover PathIcon">
+                            <Setter Property="Width" Value="16" />
+                            <Setter Property="Height" Value="16" />
+                        </Style>
+
+                        <!-- TextBlock animation styles... -->
+                        <Style Selector="Button TextBlock.ActionName">
+                            <Setter Property="Opacity" Value="0" />
+                            <Setter Property="Transitions">
+                                <Transitions>
+                                    <DoubleTransition Property="Opacity" Duration="0:0:0.15" />
+                                </Transitions>
+                            </Setter>
+                        </Style>
+                        <Style Selector="Button:pointerover TextBlock.ActionName">
+                            <Setter Property="Opacity" Value="1" />
+                        </Style>
+
+                        <!-- Entry Animation Style -->
+                        <Style Selector="Button.animate-in">
+                            <Setter Property="Opacity" Value="1" />
+                            <Setter Property="RenderTransform">
+                                <TranslateTransform X="0" Y="0" />
+                            </Setter>
+                        </Style>
+                    </Button.Styles>
+
+                    <StackPanel Spacing="4" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <PathIcon Foreground="{x:Null}"
+                                  Data="{Binding Action.Icon, Converter={StaticResource StringToIconConverter}}">
+                            <PathIcon.Styles>
+                                <Style Selector="Path">
+                                    <Setter Property="Stroke" Value="{DynamicResource PrimaryColor}" />
+                                    <Setter Property="StrokeThickness" Value="1" />
+                                </Style>
+                            </PathIcon.Styles>
+                        </PathIcon>
+                        <TextBlock Classes="Small ActionName" Text="{Binding Action.Name}" FontSize="12" Width="58"
+                                   TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center"
+                                   IsHitTestVisible="False" />
+                    </StackPanel>
+                </Button>
+            </DataTemplate>
+        </ItemsRepeater.ItemTemplate>
+    </ItemsRepeater>
+</shadUi:Window>

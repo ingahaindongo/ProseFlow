@@ -18,9 +18,29 @@
                  Text="{Binding ApiKey, Mode=TwoWay}"
                  Watermark="Begins with sk-, gsk-, etc." />
 
-        <TextBox shadui:ControlAssist.Label="Model Name (Optional)"
+        <TextBox shadui:ControlAssist.Label="Base URL (Optional)"
+                 shadui:ControlAssist.Hint="For custom/self-hosted endpoints."
+                 Text="{Binding BaseUrl, Mode=TwoWay}"
+                 Watermark="https://api.openai.com" />
+
+        <TextBox shadui:ControlAssist.Label="Model Name"
                  Text="{Binding ModelName, Mode=TwoWay}"
                  Watermark="e.g., gpt-4o, llama3-70b-8192" />
+        
+        <StackPanel>
+            <TextBlock Text="Temperature" />
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                <Slider
+                    Grid.Column="0"
+                    VerticalAlignment="Center" Maximum="2" Minimum="0"
+                    TickFrequency="0.1" IsSnapToTickEnabled="True"
+                    TickPlacement="BottomRight"
+                    Value="{Binding Temperature}" />
+                <TextBox
+                    Grid.Column="1" Width="80"
+                    Text="{Binding Temperature, Converter={StaticResource NumericStringConverter}, ConverterParameter='F2'}" />
+            </Grid>
+        </StackPanel>
         
         <DockPanel>
             <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center"

@@ -8,20 +8,20 @@ public enum OutputMode
     /// <summary>
     /// The application decides whether to open a new window or replace in-place based on the action's configuration.
     /// </summary>
-    Default,
+    Default = -1,
     
     /// <summary>
     /// The result should be pasted directly, replacing the selected text.
     /// </summary>
-    InPlace,
+    InPlace = 0,
     
     /// <summary>
     /// The result should be displayed in a new, interactive window.
     /// </summary>
-    Windowed,
+    Windowed = 1,
     
     /// <summary>
     /// The result should be displayed in a diff view window for comparison and approval.
     /// </summary>
-    Diff
+    Diff = 2
 }

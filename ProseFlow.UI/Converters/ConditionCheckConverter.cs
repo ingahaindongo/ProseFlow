@@ -10,6 +10,8 @@ namespace ProseFlow.UI.Converters;
 /// <remarks>
 /// This converter takes a value as input and checks if it matches a specified condition.
 /// It returns one value if the condition is true and another value if it's false.
+/// Conditions can be combined using AND (,) and OR (;). OR has higher precedence.
+/// For example, "cond1,cond2;cond3" is evaluated as (cond1 AND cond2) OR cond3.
 /// </remarks>
 public class ConditionCheckConverter : IValueConverter
 {
@@ -18,7 +20,10 @@ public class ConditionCheckConverter : IValueConverter
     /// </summary>
     /// <param name="value">The value to check against the condition.</param>
     /// <param name="targetType">The target type of the conversion, not used.</param>
-    /// <param name="parameter">A string containing the condition, true value, and false value, separated by "|" (pipe character). Example: "condition|trueValue|falseValue".</param>
+    /// <param name="parameter">
+    /// A string containing the condition, true value, and false value, separated by "|" (pipe character).
+    /// Example: "condition1;condition2,condition3|trueValue|falseValue".
+    /// </param>
     /// <param name="culture">The culture information, not used.</param>
     /// <returns>The true value if the condition is met, otherwise the false value.</returns>
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
@@ -32,15 +37,19 @@ public class ConditionCheckConverter : IValueConverter
             throw new ArgumentException(
                 "Invalid condition string format. Expected 'condition|trueValue|falseValue' or 'condition|trueResult|falseResult'.");
 
-        var conditions = parts[0].Split(';', StringSplitOptions.RemoveEmptyEntries);
+        var orGroups = parts[0].Split(';', StringSplitOptions.RemoveEmptyEntries);
         var trueResult = parts.Length >= 2 ? parts[1] : "True";
         var falseResult = parts.Length >= 3 ? parts[2] : "False";
 
-        foreach (var condition in conditions)
-            if (!CheckCondition(value, condition))
-                return falseResult;
+        // If any OR group is true, the entire expression is true.
+        foreach (var orGroup in orGroups)
+        {
+            if (CheckAndConditions(value, orGroup))
+                return trueResult;
+        }
 
-        return trueResult;
+        // If no OR group was true, the expression is false.
+        return falseResult;
     }
 
     /// <summary>
@@ -50,13 +59,33 @@ public class ConditionCheckConverter : IValueConverter
     /// <param name="targetType">The target type of the conversion.</param>
     /// <param name="parameter">The parameter for the conversion.</param>
     /// <param name="culture">The culture information.</param>
-    /// <returns>Throws a `NotImplementedException`.</returns>
+    /// <returns>Throws a `NotSupportedException`.</returns>
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         throw new NotSupportedException();
     }
 
-    private bool CheckCondition(object? input, string condition)
+    /// <summary>
+    /// Checks a group of AND-connected conditions.
+    /// </summary>
+    private static bool CheckAndConditions(object? input, string andGroup)
+    {
+        var andConditions = andGroup.Split(',', StringSplitOptions.RemoveEmptyEntries);
+
+        // All conditions in an AND group must be true.
+        foreach (var condition in andConditions)
+        {
+            if (!CheckCondition(input, condition))
+                return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Checks a single condition against the input value.
+    /// </summary>
+    private static bool CheckCondition(object? input, string condition)
     {
         var trimmedCondition = condition.Trim();
 

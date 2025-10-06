@@ -33,8 +33,9 @@ public partial class CloudProviderEditorViewModel(CloudProviderConfiguration con
     [ObservableProperty]
     private float _configTemperature = config.Temperature;
     
-    public List<ProviderType> AvailableProviderTypes { get; } = Enum.GetValues(typeof(ProviderType)).Cast<ProviderType>().ToList();
-    
+    public List<ProviderType> AvailableProviderTypes { get; } = Enum.GetValues<ProviderType>()
+        .Where(pt => pt != ProviderType.Cloud && pt != ProviderType.Local)
+        .ToList();    
     
     partial void OnConfigTemperatureChanged(float value)
     {

@@ -37,36 +37,51 @@
             </StackPanel>
         </DockPanel>
 
+        <!-- Search and Filter Controls -->
+        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="8" Margin="48,0,48,24" DockPanel.Dock="Top">
+            <TextBox Grid.Column="0" Watermark="Search history..." Text="{Binding SearchText, Mode=TwoWay}" Classes="Clearable" />
+            <ComboBox Grid.Column="1" MinWidth="150" ItemsSource="{Binding AvailableFilters}" SelectedItem="{Binding SelectedFilter}" />
+        </Grid>
+
         <!-- Scrollable Main Content -->
         <ScrollViewer>
             <StackPanel>
-                <!-- No History Message -->
-                <Border IsVisible="{Binding !HistoryEntries.Count}">
+                <!-- Empty State Message -->
+                <Border IsVisible="{Binding !HasHistory}">
                     <StackPanel Margin="0,80" Spacing="16" HorizontalAlignment="Center">
-                        <icons:SymbolIcon Size="36" Symbol="History" Width="64" Height="64" HorizontalAlignment="Center" />
-                        <TextBlock Classes="h4 Muted" Text="No History Yet" HorizontalAlignment="Center" />
-                        <TextBlock Classes="p Muted" Text="Your recent interactions will appear here." HorizontalAlignment="Center" />
+                        <icons:SymbolIcon Size="64" Symbol="History" HorizontalAlignment="Center" />
+                        <TextBlock Classes="h4 Muted" Text="{Binding EmptyStateMessage}" HorizontalAlignment="Center" />
                     </StackPanel>
                 </Border>
 
                 <ItemsControl Margin="48,0,48,24" ItemsSource="{Binding HistoryEntries}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <StackPanel Spacing="16" />
+                            <VirtualizingStackPanel />
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
 
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <shadui:Card HasShadow="True">
+                            <shadui:Card HasShadow="True" Margin="0,8">
                                 <!-- Header and summary -->
                                 <shadui:Card.Header>
                                     <DockPanel>
-                                        <TextBlock
-                                            DockPanel.Dock="Right"
-                                            Classes="Small Muted"
-                                            Text="{Binding Timestamp, StringFormat='{}{0:g}'}" />
-                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                            <TextBlock
+                                                Classes="Small Muted"
+                                                Text="{Binding Timestamp, StringFormat='{}{0:g}'}" />
+                                            
+                                            <Button
+                                                Classes="Ghost Destructive"
+                                                ToolTip.Tip="Delete this entry"
+                                                Command="{Binding $parent[ItemsControl].((vm:HistoryViewModel)DataContext).DeleteHistoryEntryCommand, FallbackValue={x:Null}}"
+                                                CommandParameter="{Binding}">
+                                                <icons:SymbolIcon Size="16" Symbol="Trash" />
+                                            </Button>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                             <TextBlock FontWeight="Medium" Text="{Binding ActionName}" />
                                             <TextBlock Classes="Muted" Text="·" />
                                             <TextBlock Classes="Small Muted" Text="{Binding ProviderUsed}" />

@@ -22,7 +22,13 @@ public partial class CloudOnboardingViewModel : ViewModelBase
     private string _apiKey = string.Empty;
 
     [ObservableProperty]
+    private string _baseUrl = string.Empty;
+
+    [ObservableProperty]
     private string _modelName = "gpt-4o";
+
+    [ObservableProperty]
+    private float _temperature = 0.7f;
 
     [ObservableProperty]
     private TestStatus _status = TestStatus.Idle;
@@ -42,9 +48,10 @@ public partial class CloudOnboardingViewModel : ViewModelBase
             Name = $"{SelectedProviderType} (Default)",
             ProviderType = SelectedProviderType,
             ApiKey = ApiKey,
+            BaseUrl = BaseUrl,
             Model = ModelName,
             IsEnabled = true,
-            Temperature = 0.7f
+            Temperature = Temperature
         };
     }
 
@@ -63,8 +70,11 @@ public partial class CloudOnboardingViewModel : ViewModelBase
 
         try
         {
-            var api = new TornadoApi([ new ProviderAuthentication(MapToLlmTornadoProvider(SelectedProviderType), ApiKey)]);
-            
+            // If a custom BaseUrl is provided, use it for the API call.
+            var api = !string.IsNullOrWhiteSpace(BaseUrl)
+                ? new TornadoApi(new Uri(BaseUrl), ApiKey, MapToLlmTornadoProvider(SelectedProviderType))
+                : new TornadoApi(ApiKey, MapToLlmTornadoProvider(SelectedProviderType));
+
             // Test authentication by getting models
             var models = await api.Models.GetModels();
 
@@ -76,7 +86,7 @@ public partial class CloudOnboardingViewModel : ViewModelBase
             else
             {
                 Status = TestStatus.Error;
-                StatusMessage = "Authentication succeeded, but no models found.";
+                StatusMessage = "Authentication seems to have failed. No models were found.";
             }
         }
         catch (Exception ex)

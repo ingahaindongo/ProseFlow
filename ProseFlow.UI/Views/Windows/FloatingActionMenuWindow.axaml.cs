@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using ProseFlow.Application.Events;
 using ProseFlow.UI.ViewModels.Actions;
 using ProseFlow.UI.ViewModels.Windows;
 using Window = ShadUI.Window;
@@ -79,6 +78,7 @@ public partial class FloatingActionMenuWindow : Window
 
     private void WindowBase_OnDeactivated(object? sender, EventArgs e)
     {
+        AppEvents.OnFloatingMenuStateChanged(false);
         Close();
     }
 

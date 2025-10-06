@@ -2,9 +2,6 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Layout;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -28,6 +25,8 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     private readonly IServiceProvider _serviceProvider;
     private readonly IDownloadManager _downloadManager;
     private readonly IUpdateService _updateService;
+    private readonly IWorkspaceManager _workspaceManager;
+    private readonly IDialogService _dialogService;
 
     [ObservableProperty] private DialogManager _dialogManager;
     [ObservableProperty] private ToastManager _toastManager;
@@ -35,15 +34,19 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     [ObservableProperty] private bool _hasActiveDownloads;
     [ObservableProperty] private int _activeDownloadCount;
     [ObservableProperty] private DownloadsPopupViewModel _downloadsPopup;
+    [ObservableProperty] private bool _isWorkspaceConnected;
+    [ObservableProperty] private bool _areWorkspaceUpdatesAvailable;
 
     public ObservableCollection<IPageViewModel> PageViewModels { get; } = [];
 
     public MainViewModel(IServiceProvider serviceProvider, DialogManager dialogManager, ToastManager toastManager,
-        IDownloadManager downloadManager, IUpdateService updateService)
+        IDownloadManager downloadManager, IUpdateService updateService, IWorkspaceManager workspaceManager, IDialogService dialogService)
     {
         _serviceProvider = serviceProvider;
         _downloadManager = downloadManager;
         _updateService = updateService;
+        _workspaceManager = workspaceManager;
+        _dialogService = dialogService;
         _dialogManager = dialogManager;
         _toastManager = toastManager;
         _downloadsPopup = _serviceProvider.GetRequiredService<DownloadsPopupViewModel>();
@@ -62,13 +65,25 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         // Subscribe to events
         _downloadManager.DownloadsChanged += OnDownloadsChanged;
         _updateService.UpdateAvailable += OnUpdateAvailable;
+        _workspaceManager.StateChanged += OnWorkspaceStateChanged;
+        
         OnDownloadsChanged(); // Set initial state
+        OnWorkspaceStateChanged(); // Set initial state
     }
 
     private void OnDownloadsChanged()
     {
         ActiveDownloadCount = _downloadManager.ActiveDownloadCount;
         HasActiveDownloads = ActiveDownloadCount > 0;
+    }
+    
+    private void OnWorkspaceStateChanged()
+    {
+        Dispatcher.UIThread.Post(async void () =>
+        {
+            IsWorkspaceConnected = _workspaceManager.IsConnected;
+            AreWorkspaceUpdatesAvailable = await _workspaceManager.CheckForRemoteChangesAsync();
+        });
     }
 
     private void OnUpdateAvailable()
@@ -86,22 +101,31 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void ShowDownloadsPopup()
     {
-        var dialogService = _serviceProvider.GetRequiredService<IDialogService>();
-        dialogService.ShowDownloadsDialog();
+        _dialogService.ShowDownloadsDialog();
     }
 
-    partial void OnCurrentPageChanged(IPageViewModel? value)
+    [RelayCommand]
+    private async Task SyncWorkspaceAsync()
     {
-        if (value is null) return;
+        var synced = await _dialogService.ShowSyncDialogAsync();
+        if (synced && CurrentPage is not null) await CurrentPage.OnNavigatedToAsync(); // If a sync happened, force reload the current page's data
+    }
 
+    partial void OnCurrentPageChanged(IPageViewModel? oldValue, IPageViewModel? newValue)
+    {
+        if (newValue is null) return;
+        
+        // Unload data or dispose objects in old pag
+        oldValue?.OnNavigatedFromAsync();
+        
         // Deselect all pages
         foreach (var page in PageViewModels) page.IsSelected = false;
 
         // Select the new current page
-        value.IsSelected = true;
+        newValue.IsSelected = true;
 
         // Load data for the new page
-        value.OnNavigatedToAsync();
+        newValue.OnNavigatedToAsync();
     }
 
     [RelayCommand]
@@ -119,6 +143,7 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     {
         _downloadManager.DownloadsChanged -= OnDownloadsChanged;
         _updateService.UpdateAvailable -= OnUpdateAvailable;
+        _workspaceManager.StateChanged -= OnWorkspaceStateChanged;
         foreach (var page in PageViewModels)
             if (page is IDisposable disposablePage)
                 disposablePage.Dispose();

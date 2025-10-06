@@ -1,5 +1,4 @@
-﻿using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -78,5 +77,11 @@ public partial class AboutViewModel : ViewModelBase
     private async Task OpenLinkAsync(string url)
     {
         await _dialogService.OpenUrlAsync(url);
+    }
+    
+    [RelayCommand]
+    private async Task OpenLogFolderAsync()
+    {
+        await _dialogService.OpenUrlAsync(Constants.LogDirectoryPath);
     }
 }

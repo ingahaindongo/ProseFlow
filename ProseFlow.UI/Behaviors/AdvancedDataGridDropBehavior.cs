@@ -47,14 +47,14 @@ public class AdvancedDataGridDropBehavior : AvaloniaObject
 
     private static async void OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (sender is not DataGrid dataGrid || !e.GetCurrentPoint(dataGrid).Properties.IsLeftButtonPressed) return;
+        if (sender is not DataGrid dataGrid || !e.GetCurrentPoint(dataGrid).Properties.IsLeftButtonPressed ||
+            e.Source is not Control control || control.FindAncestorOfType<ICommandSource>(true) is not null) return;
 
-        var source = e.Source as Control;
         var dataObject = new DataObject();
         object? dragData = null;
 
         // Scenario 1: Dragging an Action row
-        var row = source?.FindAncestorOfType<DataGridRow>();
+        var row = control.FindAncestorOfType<DataGridRow>();
         if (row?.DataContext is Action action)
         {
             dataObject.Set(ActionDragKey, action);
@@ -63,8 +63,8 @@ public class AdvancedDataGridDropBehavior : AvaloniaObject
         else
         {
             // Scenario 2: Dragging a Group header
-            var header = source?.FindAncestorOfType<DataGridRowGroupHeader>();
-            if (header?.DataContext is DataGridCollectionViewGroup group && group.Key is { } groupKey)
+            var header = control.FindAncestorOfType<DataGridRowGroupHeader>();
+            if (header?.DataContext is DataGridCollectionViewGroup { Key: { } groupKey })
             {
                 dataObject.Set(GroupDragKey, groupKey);
                 dragData = groupKey;
@@ -101,7 +101,8 @@ public class AdvancedDataGridDropBehavior : AvaloniaObject
         object? targetItem = null;
         if (targetRow?.DataContext is not null)
             targetItem = targetRow.DataContext; // Dropped on an Action row
-        else if (targetGroupHeader?.DataContext is DataGridCollectionViewGroup group && group.Key is not null) targetItem = group.Key; // Dropped on a Group header
+        else if (targetGroupHeader?.DataContext is DataGridCollectionViewGroup { Key: not null } group)
+            targetItem = group.Key; // Dropped on a Group header
 
         if (targetItem is null || ReferenceEquals(draggedItem, targetItem)) return;
 

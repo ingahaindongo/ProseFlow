@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using ProseFlow.Core.Enums;
 
 namespace ProseFlow.Application.DTOs;
 
@@ -17,12 +18,12 @@ public record ActionDto
     [JsonPropertyName("icon")]
     public string Icon { get; init; } = "avares://ProseFlow/Assets/Icons/default.svg";
 
-    [JsonPropertyName("open_in_window")]
-    public bool OpenInWindow { get; init; }
+    [JsonPropertyName("output_mode")]
+    public OutputMode OutputMode { get; init; }
 
     [JsonPropertyName("explain_changes")]
     public bool ExplainChanges { get; init; }
 
     [JsonPropertyName("application_context")]
-    public List<string> ApplicationContext { get; init; } = [];
+    public IEnumerable<string> ApplicationContext { get; init; } = [];
 }

@@ -32,12 +32,12 @@
             </UniformGrid>
 
             <!-- Chart -->
-            <shadui:Card>
+            <shadui:Card Name="ChartsCard">
                 <shadui:Card.Header>
                     <shadui:CardTitle>Cloud Token Usage (Prompt vs Completion)</shadui:CardTitle>
                 </shadui:Card.Header>
                 <avalonia:CartesianChart Series="{Binding Series}" XAxes="{Binding XAxes}" YAxes="{Binding YAxes}"
-                                         Height="250" Margin="12,0,12,12" LegendPosition="Bottom" />
+                                         Height="250" Margin="12,0,12,12" LegendPosition="Bottom" Background="{Binding #ChartsCard.Background}" />
             </shadui:Card>
 
             <!-- Data Grids -->

